@@ -148,8 +148,12 @@ const matches = defineCollection({
     }),
     rounds: z.string(),
     result: z.enum(['win', 'loss', 'draw', 'nc']),
-    method: z.enum(['ko', 'tko', 'unanimous', 'split', 'majority', 'retire']),
+    method: z.enum(['ko', 'tko', 'unanimous', 'majority', 'split', 'retire']),
     endTime: z.string().optional(),
+    titleFight: z.object({
+      name: z.string(),
+      type: z.enum(['challenge', 'defense']),
+    }).optional(),
     title: z.string(),
     description: z.string().optional(),
     video: z.object({
@@ -162,7 +166,44 @@ const matches = defineCollection({
 })
 ```
 
+프로필은 단일 JSON으로 둔다.
+
+```ts
+const profile = z.object({
+  name: z.string(),
+  nameEn: z.string(),
+  birthYear: z.number(),
+  gym: z.string(),
+  height: z.number(),
+  weightClass: z.string(),
+  rankings: z.array(z.object({
+    org: z.string(),        // 대한킥복싱협회
+    division: z.string(),   // -63kg
+    rank: z.number(),
+    asOf: z.string(),       // 2025-12
+  })).default([]),
+  titles: z.array(z.object({
+    org: z.string(),
+    division: z.string(),
+    status: z.enum(['current', 'former']),
+    since: z.string(),
+  })).default([]),
+  availableFrom: z.string().optional(),
+  instagram: z.string(),
+})
+```
+
+랭킹에 단체명과 기준 날짜를 함께 받는 이유는, 순위만 적으면 어느 기준인지 검증할 수 없기 때문이다.
+타이틀은 보유 예정이 있으므로 구조를 미리 넣어둔다.
+
 훈련과 사진 컬렉션도 같은 방식으로 정의한다.
+
+### 문자열 관리
+
+다국어는 나중에 도입한다. 지금은 `site/src/i18n/ko.ts` 한 곳에 화면 문자열을 모아두고 컴포넌트에서
+불러 쓰는 수준까지만 대비한다. 나중에 Astro i18n 라우팅을 붙일 때 문자열을 찾아다니지 않아도 된다.
+번역 라이브러리는 지금 넣지 않는다.
+
 
 ## 6. 인코딩 규격
 
@@ -305,16 +346,70 @@ jobs:
 
 ## 12. 구현 순서
 
-1. 저장소 뼈대와 Docker 구성
-2. Astro 프로젝트 + 콘텐츠 스키마 정의
-3. 샘플 데이터로 메인 화면과 카드 그리드
-4. 전적 집계
-5. 라이트박스와 영상 재생기
-6. 필터와 대회별 보기
-7. 인코딩 파이프라인 (ffmpeg, HLS, 썸네일)
-8. R2 업로드와 CLI 대화형 입력
-9. Worker 서명과 검증
-10. GitHub Actions 배포
-11. 디자인 마감
+영상 업로드와 재생이 선결 과제다. 이 경로가 뚫리지 않으면 나머지 화면을 만들 이유가 없다.
+화면을 먼저 만들고 파이프라인을 나중에 붙이면, 마지막에 가서 구조를 다시 짜게 될 위험이 있다.
 
-3번까지는 R2 없이 로컬 샘플 파일로 진행할 수 있다. Cloudflare 계정 설정은 7번 이후에 필요하다.
+그래서 1단계에서 영상 한 편을 끝까지 관통시킨다. 인코딩부터 재생까지 전 구간을 얇게 한 번 통과시키고,
+동작을 확인한 뒤 각 구간을 두껍게 만든다.
+
+### 1단계 — 영상 한 편 관통 (최우선)
+
+```
+원본 mp4 → ffmpeg 인코딩 → HLS 분할 → R2 업로드
+         → Worker 서명 → 브라우저 재생
+```
+
+- [ ] 저장소 뼈대, npm workspaces, Docker (node:22 + ffmpeg)
+- [ ] ffmpeg 인코딩 스크립트 (해상도 자동 판정, HLS 분할, 썸네일)
+- [ ] Cloudflare 계정, R2 버킷 생성, 업로드 스크립트
+- [ ] Worker: 서명 발급, 토큰 검증, Referer 검사, m3u8 재작성
+- [ ] 최소 HTML 페이지에서 hls.js 로 재생
+
+**검증 기준**
+
+1. 휴대폰 LTE 환경에서 끊김 없이 재생된다
+2. 구간 이동이 동작한다
+3. 개발자도구에서 조각 주소를 복사해 다른 탭에서 열면 403이 뜬다
+4. 30분 뒤 같은 주소로 요청하면 만료로 거부된다
+
+이 네 가지가 확인되기 전에는 다음 단계로 넘어가지 않는다.
+
+### 2단계 — 첫 화면과 경기 목록
+
+- [ ] Astro 프로젝트, 콘텐츠 스키마 정의
+- [ ] 샘플 경기 데이터 5건 작성
+- [ ] 전적 집계 (`lib/record.ts`)
+- [ ] 첫 화면: 프로필, 전적, 랭킹, 연락처 고정 버튼
+- [ ] 경기 목록: 최근 5경기 노출, 나머지 접기
+- [ ] 영상 재생기를 Vue 컴포넌트로 정리 (배속 포함)
+- [ ] GitHub Actions 배포
+
+**검증 기준**: 실제 URL을 휴대폰으로 열어 첫 화면에서 스크롤 없이 전적과 체급이 보인다.
+
+### 3단계 — 업로드 CLI
+
+- [ ] 대화형 입력 (이전 입력값 기억)
+- [ ] 사진 일괄 등록
+- [ ] 인코딩 결과 로컬 캐시
+- [ ] JSON 생성과 git 연동
+
+**검증 기준**: 명령 한 줄로 영상 등록부터 사이트 반영까지 끝난다.
+
+### 4단계 — 나머지 화면
+
+- [ ] 훈련 · 사진 카드 그리드
+- [ ] 필터 (URL 쿼리 반영)
+- [ ] 대회별 보기
+- [ ] 사진 뷰어 (확대, 좌우 이동)
+- [ ] 상세 페이지와 링크 미리보기 메타 태그
+
+### 5단계 — 디자인 마감
+
+- [ ] 색상, 타이포그래피 확정
+- [ ] 모바일 점검
+- [ ] 로딩 성능 점검
+
+### 이후 과제
+
+- 다국어 (i18n 라우팅)
+- PDF 출력
