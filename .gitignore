@@ -1,0 +1,27 @@
+# 의존성
+node_modules/
+
+# 빌드 결과
+dist/
+.astro/
+.output/
+
+# 환경 변수
+.env
+.env.local
+.env.*.local
+
+# Cloudflare
+.wrangler/
+
+# 인코딩 캐시 (용량이 크므로 저장소에 넣지 않는다)
+cache/
+tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 로그
+*.log
+npm-debug.log*
