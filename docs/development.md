@@ -344,7 +344,67 @@ jobs:
 | `MEDIA_SIGN_SECRET` | Worker 서명 키. Worker 시크릿과 동일한 값 |
 | `PUBLIC_MEDIA_BASE` | Worker 도메인. 사이트 빌드에 포함 |
 
-## 12. 구현 순서
+## 12. 사전 준비
+
+코드를 쓰기 전에 끝내야 하는 외부 설정이다. 직접 하셔야 하는 것과 내가 하는 것을 나눠 적는다.
+
+### 배포 주소
+
+원격 저장소가 `yes-eul-jeong/gallery` 이므로 배포 주소는 다음과 같다.
+
+```
+https://yes-eul-jeong.github.io/gallery/
+```
+
+경로에 저장소 이름이 붙으므로 `astro.config.mjs` 에 `base: '/gallery'` 를 지정해야 한다.
+이 설정을 빠뜨리면 빌드는 통과하지만 배포 후 모든 링크와 이미지가 깨진다.
+
+나중에 개인 도메인을 붙이면 `base` 를 지우고 `site` 만 바꾼다.
+
+### 직접 하셔야 하는 것
+
+**1. GitHub Pages 활성화**
+
+저장소 Settings → Pages → Source 를 `GitHub Actions` 로 지정한다.
+`Deploy from a branch` 가 아니다. Astro 빌드 결과를 Actions 가 올리는 방식이다.
+
+**2. Cloudflare 계정**
+
+가입 후 결제 수단을 등록한다. R2 는 무료 한도 안에서 써도 카드 등록을 요구한다.
+청구는 저장 10GB 를 넘어야 시작된다.
+
+**3. R2 버킷 생성**
+
+- 버킷 이름: `kickbox-media` (변경 가능)
+- 위치: Asia-Pacific
+- 공개 접근은 켜지 않는다. Worker 를 거쳐서만 읽는다
+
+**4. R2 API 토큰 발급**
+
+R2 → Manage API Tokens → Create API Token.
+
+- 권한: Object Read & Write
+- 대상: 위에서 만든 버킷만
+- 발급 직후 표시되는 Access Key ID 와 Secret Access Key 를 받아둔다. 다시 볼 수 없다
+
+**5. Cloudflare 계정 ID 확인**
+
+대시보드 우측 또는 R2 개요 화면에 표시된다.
+
+발급받은 값 네 개(계정 ID, Access Key ID, Secret Access Key, 버킷 이름)를 전달해 주시면
+`.env` 에 넣는다. 이 파일은 git 에 올라가지 않는다.
+
+### 내가 하는 것
+
+- 저장소 뼈대와 npm workspaces 구성
+- Docker 이미지 (node:22 + ffmpeg) 와 compose 파일
+- `.gitignore`, `.env.example`
+- 각 워크스페이스의 package.json 과 TypeScript 설정
+- Wrangler 설정 파일
+
+Wrangler 로그인은 브라우저 인증이 필요하므로 그 시점에 실행 방법을 안내한다.
+
+## 13. 구현 순서
 
 영상 업로드와 재생이 선결 과제다. 이 경로가 뚫리지 않으면 나머지 화면을 만들 이유가 없다.
 화면을 먼저 만들고 파이프라인을 나중에 붙이면, 마지막에 가서 구조를 다시 짜게 될 위험이 있다.
