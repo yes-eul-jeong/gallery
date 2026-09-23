@@ -9,6 +9,7 @@
 
 - 서비스 기획: @docs/product.md
 - 개발 가이드: @docs/development.md
+- 작업 기록과 인계: @docs/worklog.md
 
 ## 작업 규칙
 
