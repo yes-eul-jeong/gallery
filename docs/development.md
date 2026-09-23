@@ -394,6 +394,24 @@ R2 → Manage API Tokens → Create API Token.
 발급받은 값 네 개(계정 ID, Access Key ID, Secret Access Key, 버킷 이름)를 전달해 주시면
 `.env` 에 넣는다. 이 파일은 git 에 올라가지 않는다.
 
+계정 ID 는 로그인 이메일이 아니라 32자리 문자열이다. R2 접속 주소에 그대로 들어간다.
+
+```
+https://<계정ID>.r2.cloudflarestorage.com
+```
+
+**진행 상태 (2026-09-23)**
+
+R2 연결을 확인했다. 버킷 조회, 업로드, 삭제가 모두 동작한다.
+
+```
+docker run --rm --env-file <자격증명> amazon/aws-cli \
+  s3 ls --endpoint-url https://<계정ID>.r2.cloudflarestorage.com
+```
+
+`.env` 에 계정 ID, 액세스 키, 시크릿 키, 버킷 이름을 채웠고 서명 키를 생성해 넣었다.
+남은 것은 GitHub Pages 활성화와 Worker 배포 후의 `PUBLIC_MEDIA_BASE` 다.
+
 ### 내가 하는 것
 
 - 저장소 뼈대와 npm workspaces 구성
