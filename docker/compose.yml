@@ -36,3 +36,16 @@ services:
     env_file:
       - ../.env
     entrypoint: ["/bin/bash", "-lc"]
+
+  # 미디어 Worker 개발 서버. http://localhost:8787
+  worker:
+    image: kickbox-portfolio:dev
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    working_dir: /app/worker
+    volumes:
+      - ..:/app:delegated
+    ports:
+      - "8787:8787"
+    command: npx wrangler dev --port 8787 --ip 0.0.0.0

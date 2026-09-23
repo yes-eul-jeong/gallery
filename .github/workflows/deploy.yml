@@ -33,6 +33,10 @@ jobs:
 
       - name: Astro 빌드
         run: npm run build
+        env:
+          # Worker 배포 후 저장소 Settings > Secrets 에 등록한다.
+          # 비어 있으면 영상 재생기가 표시되지 않는다.
+          PUBLIC_MEDIA_BASE: ${{ secrets.PUBLIC_MEDIA_BASE }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

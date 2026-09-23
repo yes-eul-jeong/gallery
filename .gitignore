@@ -13,10 +13,17 @@ dist/
 
 # Cloudflare
 .wrangler/
+# Worker 로컬 시크릿. MEDIA_SIGN_SECRET 이 들어간다
+.dev.vars
+.dev.vars.*
 
 # 인코딩 캐시 (용량이 크므로 저장소에 넣지 않는다)
 cache/
 tmp/
+
+# 원본 영상. 압축본에서 원본을 복원할 수 없으므로 별도로 보관한다
+media-source/*
+!media-source/.gitkeep
 
 # OS
 .DS_Store

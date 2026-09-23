@@ -1,6 +1,9 @@
 ---
 import { getCollection, getEntry } from 'astro:content'
 import { tally, byDateDesc } from '../lib/record'
+import VideoPlayer from '../components/VideoPlayer.vue'
+
+const mediaBase = import.meta.env.PUBLIC_MEDIA_BASE ?? ''
 
 const profile = await getEntry('profile', 'main')
 const matches = (await getCollection('matches')).sort(byDateDesc)
@@ -34,12 +37,18 @@ const ranking = p.rankings[0]
       {p.availableFrom && <p>{p.availableFrom} 이후 출전 가능</p>}
 
       <h2>경기 {matches.length}</h2>
+      {!mediaBase && <p>PUBLIC_MEDIA_BASE 가 설정되지 않아 영상을 재생할 수 없습니다</p>}
       <ul>
         {matches.map((m) => (
           <li>
-            {m.data.date} · {m.data.event} · vs {m.data.opponent.name} ·
-            {m.data.result === 'win' ? ' 승' : m.data.result === 'loss' ? ' 패' : ' 무'}
-            {m.data.titleFight && ' · 타이틀전'}
+            <p>
+              {m.data.date} · {m.data.event} · vs {m.data.opponent.name} ·
+              {m.data.result === 'win' ? ' 승' : m.data.result === 'loss' ? ' 패' : ' 무'}
+              {m.data.titleFight && ' · 타이틀전'}
+            </p>
+            {m.data.video && mediaBase && (
+              <VideoPlayer client:visible mediaBase={mediaBase} videoId={m.data.video.key} />
+            )}
           </li>
         ))}
       </ul>
