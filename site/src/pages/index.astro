@@ -1,0 +1,48 @@
+---
+import { getCollection, getEntry } from 'astro:content'
+import { tally, byDateDesc } from '../lib/record'
+
+const profile = await getEntry('profile', 'main')
+const matches = (await getCollection('matches')).sort(byDateDesc)
+const pro = tally(matches, 'pro')
+const amateur = tally(matches, 'amateur')
+
+if (!profile) throw new Error('profile.json 에 main 항목이 없습니다')
+const p = profile.data
+const ranking = p.rankings[0]
+---
+
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{p.name} · 파이트 레주메</title>
+  </head>
+  <body>
+    <main>
+      <h1>{p.name}</h1>
+      <p>{p.gym} · {p.birthYear}년생</p>
+
+      <p>
+        <strong>{pro.win} - {pro.loss}</strong>
+        {pro.ko > 0 && <span>KO {pro.ko}</span>}
+      </p>
+      {amateur.win + amateur.loss > 0 && <p>아마 {amateur.win} - {amateur.loss}</p>}
+
+      <p>{p.weightClass} · {p.height}cm</p>
+      {ranking && <p>{ranking.org} {ranking.division} {ranking.rank}위 ({ranking.asOf} 기준)</p>}
+      {p.availableFrom && <p>{p.availableFrom} 이후 출전 가능</p>}
+
+      <h2>경기 {matches.length}</h2>
+      <ul>
+        {matches.map((m) => (
+          <li>
+            {m.data.date} · {m.data.event} · vs {m.data.opponent.name} ·
+            {m.data.result === 'win' ? ' 승' : m.data.result === 'loss' ? ' 패' : ' 무'}
+            {m.data.titleFight && ' · 타이틀전'}
+          </li>
+        ))}
+      </ul>
+    </main>
+  </body>
+</html>

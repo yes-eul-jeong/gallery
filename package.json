@@ -1,0 +1,24 @@
+{
+  "name": "kickbox-portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "프로 킥복싱 선수 파이트 레주메 사이트",
+  "workspaces": [
+    "site",
+    "pipeline",
+    "worker"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @kickbox/site",
+    "build": "npm run build -w @kickbox/site",
+    "preview": "npm run preview -w @kickbox/site",
+    "add": "npm run add -w @kickbox/pipeline",
+    "worker:dev": "npm run dev -w @kickbox/worker",
+    "worker:deploy": "npm run deploy -w @kickbox/worker",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

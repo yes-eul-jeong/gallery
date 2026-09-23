@@ -1,0 +1,15 @@
+{
+  "date": "2025-02-08",
+  "level": "pro",
+  "event": "KING OF KINGS",
+  "rule": "muaythai",
+  "weightClass": "-63kg",
+  "opponent": { "name": "상대선수2", "gym": "상대체육관2" },
+  "rounds": "5R 3분",
+  "result": "loss",
+  "method": "split",
+  "titleFight": { "name": "KOK -63kg 타이틀전", "type": "challenge" },
+  "title": "KOK 타이틀 도전",
+  "description": "샘플 데이터입니다.",
+  "photos": []
+}

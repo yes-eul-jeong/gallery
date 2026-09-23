@@ -126,6 +126,54 @@ WORKDIR /app
 
 원본 영상을 두는 디렉터리를 볼륨으로 마운트한다. 컨테이너 안에서 파일 경로를 그대로 쓸 수 있게 한다.
 
+### 볼륨 마운트에서 생기는 문제와 대응
+
+Astro 는 `site/.astro/` 에 상태 파일을 둔다. 이 디렉터리가 호스트 볼륨에 있으면 컨테이너 생명주기와
+어긋나 두 가지 문제가 생긴다. 실제로 겪었고 아래 방식으로 해결했다.
+
+**1. dev 서버 중복 실행 락**
+
+`site/.astro/dev.json` 에 실행 중인 서버의 PID 를 기록한다. 컨테이너를 내리면 프로세스는 죽지만
+이 파일은 남는다. 다음 기동 때 Astro 가 그 PID 를 보고 "이미 실행 중"으로 판단해 종료한다.
+컨테이너는 종료 코드 1 로 죽고 서버가 아예 뜨지 않는다.
+
+```
+Another astro dev server is already running.
+  URL:  http://localhost:4321
+  PID:  31
+```
+
+`astro dev --force` 로 실행해 락을 무시한다. 컨테이너 하나에 서버 하나이므로 락이 의미가 없다.
+
+**2. 상태 파일 쓰기로 인한 재시작**
+
+Astro 는 기동할 때 `site/.astro/settings.json` 에 업데이트 확인 시각을 기록한다.
+볼륨 마운트 환경에서는 이 쓰기가 설정 파일 변경으로 감지되어 dev 서버가 재시작된다.
+재시작 과정에서 content layer 의 Vite transport 가 끊기고, 콘텐츠 동기화가 통째로 누락된다.
+결과적으로 모든 컬렉션이 빈 상태가 되어 페이지가 500 을 반환한다.
+
+```
+Configuration file updated. Restarting...
+[WARN] [content] Content config not loaded
+[ERROR] [content] transport was disconnected, cannot call "fetchModule"
+[WARN] [content] The collection "matches" does not exist or is empty.
+```
+
+`astro.config.mjs` 에서 감시 대상에서 제외한다. chokidar 4 는 glob 을 지원하지 않으므로
+정규식으로 지정한다.
+
+```js
+vite: {
+  server: {
+    watch: {
+      ignored: [/[\\/]\.astro[\\/]/],
+    },
+  },
+}
+```
+
+두 조치를 적용한 뒤 캐시 삭제를 포함한 다섯 가지 조건에서 기동해 모두 정상 응답을 확인했다.
+
 ## 5. 콘텐츠 스키마
 
 Astro Content Collections 에 zod 스키마를 정의한다. 값이 스키마에 어긋나면 빌드가 실패하므로

@@ -1,0 +1,21 @@
+{
+  "main": {
+    "name": "선수명",
+    "nameEn": "PLAYER NAME",
+    "birthYear": 1998,
+    "gym": "소속 체육관",
+    "height": 173,
+    "weightClass": "-63kg",
+    "rankings": [
+      {
+        "org": "대한킥복싱협회",
+        "division": "-63kg",
+        "rank": 3,
+        "asOf": "2025-12"
+      }
+    ],
+    "titles": [],
+    "availableFrom": "2026년 3월",
+    "instagram": "instagram_id"
+  }
+}
