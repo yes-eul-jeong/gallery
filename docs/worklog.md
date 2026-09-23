@@ -1,6 +1,6 @@
 # 작업 기록과 인계
 
-최종 갱신: 2026-09-23
+최종 갱신: 2026-09-23 (Worker 배포 직전)
 
 다른 환경에서 이어서 작업할 때 이 문서부터 읽는다.
 
@@ -17,19 +17,37 @@
 
 ### 진행 중 (여기서 멈춤)
 
-**Worker 배포**가 서브도메인 미등록으로 막혔다.
+**Worker 배포 직전까지 왔다.** workers.dev 서브도메인은 해결됐다.
+
+처음에는 서브도메인이 없어 배포가 거부됐는데, 대시보드에서 Compute 메뉴를 여는 것만으로
+자동 생성됐다. 현재 값은 다음과 같다.
 
 ```
-✘ You need to register a workers.dev subdomain before publishing
+mpjeong0325
 ```
 
-대시보드 주소는 `dash.cloudflare.com/<계정ID>/workers/onboarding` 이다.
-계정 ID 는 `.env` 의 `R2_ACCOUNT_ID` 와 같은 값이다.
+따라서 배포하면 Worker 주소는 이렇게 된다.
 
-Workers 를 처음 쓰는 계정이라 서브도메인을 한 번 등록해야 한다. 계정 전체에 적용되고
-이름은 전역에서 고유해야 하므로 사용자가 직접 정한다.
+```
+kickbox-media.mpjeong0325.workers.dev
+```
 
-등록하면 Worker 주소가 `kickbox-media.<서브도메인>.workers.dev` 가 된다.
+**결정하지 않은 것**: 이 이름을 쓸지 바꿀지.
+
+`mpjeong0325` 는 이메일 로컬 파트와 같아서, 주소를 본 사람이 `mpjeong0325@gmail.com` 을
+추측할 수 있다. 영상 재생 시 개발자도구에 노출되고 사이트 HTML 에도 들어간다.
+스팸 수집 대상이 되는 것이 신경 쓰이면 바꾸는 편이 낫다.
+
+바꾸려면 대시보드에서 해야 한다. API 로는 이미 존재하는 서브도메인을 덮어쓸 수 없다
+(`10036 Account already has an associated subdomain`).
+
+- dash.cloudflare.com → 왼쪽 **Build → Compute** → Workers
+- 그 화면 어딘가에 Subdomain 항목과 변경 링크가 있다
+- UI 가 자주 바뀌므로 못 찾으면 상단 Quick search 에 `subdomain` 을 입력해 본다
+
+**찾지 못하면 그냥 진행해도 된다.** 나중에 바꿔도 되고, 그때 고칠 곳은 두 군데뿐이다
+(`.env` 의 `PUBLIC_MEDIA_BASE`, GitHub Secrets 의 `PUBLIC_MEDIA_BASE`).
+개인 도메인을 붙이면 workers.dev 주소는 아예 노출되지 않는다.
 
 ## 2. 다른 환경에서 이어받기
 
@@ -107,29 +125,61 @@ docker compose -f docker/compose.yml up dev        # http://localhost:4321/galle
 
 ## 3. 다음에 할 일
 
-### 3.1 Worker 배포 (막혀 있는 지점)
+### 3.1 Worker 배포
 
-1. 서브도메인 등록
-   `dash.cloudflare.com/<R2_ACCOUNT_ID 값>/workers/onboarding` 에서 등록한다.
-   로그인된 상태면 dash.cloudflare.com → Workers & Pages 로 들어가도 안내가 나온다.
+서브도메인 문제는 해결됐으므로 아래 명령을 순서대로 실행하면 된다.
 
-2. 배포
+**1) 배포**
 
 ```bash
 docker compose -f docker/compose.yml run --rm app 'cd worker && npx wrangler deploy'
 ```
 
-3. 서명 키를 Worker 시크릿으로 등록
+성공하면 주소가 출력된다. `kickbox-media.mpjeong0325.workers.dev` 형태다.
+
+**2) 서명 키를 Worker 시크릿으로 등록**
+
+`.env` 의 `MEDIA_SIGN_SECRET` 과 반드시 같은 값이어야 한다. 어긋나면 모든 재생이 403 이 된다.
 
 ```bash
 docker compose -f docker/compose.yml run --rm app \
-  'cd worker && grep "^MEDIA_SIGN_SECRET=" /app/.env | cut -d= -f2 | npx wrangler secret put MEDIA_SIGN_SECRET'
+  'grep "^MEDIA_SIGN_SECRET=" /app/.env | cut -d= -f2 | (cd worker && npx wrangler secret put MEDIA_SIGN_SECRET)'
 ```
 
-4. 배포된 주소로 검증
+**3) 등록 확인**
 
-`scripts/verify-worker.sh` 의 `BASE` 를 실제 주소로 바꿔 실행하거나, curl 로 직접 확인한다.
-확인할 것은 12개 항목이며 `development.md` 13절에 표로 정리되어 있다.
+```bash
+docker compose -f docker/compose.yml run --rm app 'cd worker && npx wrangler secret list'
+```
+
+**4) 배포된 Worker 검증**
+
+```bash
+WORKER=https://kickbox-media.mpjeong0325.workers.dev
+SITE=https://yes-eul-jeong.github.io
+
+# 헬스체크
+curl -s $WORKER/health
+
+# Referer 없이 서명 요청 → 403 이어야 한다
+curl -s -o /dev/null -w "%{http_code}\n" $WORKER/sign/test-video
+
+# 정상 서명 요청 → playlist URL 이 나와야 한다
+curl -s -H "Referer: $SITE/" $WORKER/sign/test-video
+
+# 토큰 없이 조각 접근 → 403 이어야 한다
+curl -s -o /dev/null -w "%{http_code}\n" -H "Referer: $SITE/" \
+  $WORKER/hls/test-video/seg0000.m4s
+```
+
+R2 에 `hls/test-video/` 샘플이 올라가 있으므로 그대로 확인할 수 있다.
+전체 12개 항목은 `scripts/verify-worker.sh` 의 BASE 를 위 주소로 바꿔 실행한다.
+
+**5) 로컬 .env 갱신**
+
+```bash
+# PUBLIC_MEDIA_BASE 를 배포 주소로 바꾼다
+```
 
 ### 3.2 GitHub Secrets 등록
 
@@ -137,7 +187,9 @@ docker compose -f docker/compose.yml run --rm app \
 
 | 이름 | 값 |
 |---|---|
-| `PUBLIC_MEDIA_BASE` | `https://kickbox-media.<서브도메인>.workers.dev` |
+| `PUBLIC_MEDIA_BASE` | `https://kickbox-media.mpjeong0325.workers.dev` |
+
+서브도메인을 바꿨다면 그 값으로 넣는다.
 
 이 값이 없으면 빌드는 통과하지만 사이트에 영상 재생기가 표시되지 않는다.
 등록 후 아무 커밋이나 푸시하면 재배포된다.
