@@ -1,6 +1,6 @@
 # 작업 기록과 인계
 
-최종 갱신: 2026-09-23 (Worker 배포 직전)
+최종 갱신: 2026-09-28 (Worker 배포 완료)
 
 다른 환경에서 이어서 작업할 때 이 문서부터 읽는다.
 
@@ -12,42 +12,64 @@
 |---|---|
 | 기획 | 파이트 레주메로 성격 확정. 페르소나, 화면 설계, 데이터 항목 (`product.md`) |
 | 개발 설정 | Docker(node 22 + ffmpeg + curl), npm workspaces, R2 연결 검증 |
-| 1단계 | 영상 인코딩 → HLS 분할 → R2 업로드 → Worker 서명 → 재생. 검증 12항목 통과 |
-| 배포 | GitHub Actions → Pages. https://yes-eul-jeong.github.io/gallery/ 동작 확인 |
+| 1단계 | 영상 인코딩 → HLS 분할 → R2 업로드 → Worker 서명 → 재생. 로컬 검증 12항목 통과 |
+| 사이트 배포 | GitHub Actions → Pages. https://yes-eul-jeong.github.io/gallery/ 동작 확인 |
+| Worker 배포 | workers.dev 서브도메인을 `sree-cloud` 로 바꾼 뒤 배포. 배포본 검증 13항목 통과 |
 
-### 진행 중 (여기서 멈춤)
+### workers.dev 서브도메인
 
-**Worker 배포 직전까지 왔다.** workers.dev 서브도메인은 해결됐다.
-
-처음에는 서브도메인이 없어 배포가 거부됐는데, 대시보드에서 Compute 메뉴를 여는 것만으로
-자동 생성됐다. 현재 값은 다음과 같다.
-
-```
-mpjeong0325
-```
-
-따라서 배포하면 Worker 주소는 이렇게 된다.
+`mpjeong0325` 는 이메일 로컬 파트와 같아 주소를 본 사람이 이메일을 추측할 수 있었다.
+영상 재생 시 개발자도구와 사이트 HTML 에 노출되는 값이라 `sree-cloud` 로 바꿨다.
 
 ```
-kickbox-media.mpjeong0325.workers.dev
+https://kickbox-media.sree-cloud.workers.dev
 ```
 
-**결정하지 않은 것**: 이 이름을 쓸지 바꿀지.
+변경은 대시보드에서만 된다. API 의 PUT 은 이미 존재하는 서브도메인을 덮어쓰지 못한다
+(`10036 Account already has an associated subdomain`). 실제로 시도해 같은 오류를 확인했다.
 
-`mpjeong0325` 는 이메일 로컬 파트와 같아서, 주소를 본 사람이 `mpjeong0325@gmail.com` 을
-추측할 수 있다. 영상 재생 시 개발자도구에 노출되고 사이트 HTML 에도 들어간다.
-스팸 수집 대상이 되는 것이 신경 쓰이면 바꾸는 편이 낫다.
+위치는 dash.cloudflare.com → 왼쪽 **Compute → Workers & Pages** → 우측 패널
+**Account details** 카드 안의 `Subdomain` 항목이다. 값 오른쪽 연필 아이콘이 변경 버튼이다.
+Settings 탭에는 없다.
 
-바꾸려면 대시보드에서 해야 한다. API 로는 이미 존재하는 서브도메인을 덮어쓸 수 없다
-(`10036 Account already has an associated subdomain`).
+서브도메인은 계정에 하나뿐이고, 최종 주소는 `<워커이름>.<서브도메인>.workers.dev` 가 된다.
+나중에 또 바꾸면 기존 workers.dev 주소가 전부 죽으므로 `.env` 와 GitHub Secrets 두 군데를
+같이 고쳐야 한다. 개인 도메인을 붙이면 이 주소는 아예 노출되지 않는다.
 
-- dash.cloudflare.com → 왼쪽 **Build → Compute** → Workers
-- 그 화면 어딘가에 Subdomain 항목과 변경 링크가 있다
-- UI 가 자주 바뀌므로 못 찾으면 상단 Quick search 에 `subdomain` 을 입력해 본다
+### 배포본 검증 결과 (2026-09-28)
 
-**찾지 못하면 그냥 진행해도 된다.** 나중에 바꿔도 되고, 그때 고칠 곳은 두 군데뿐이다
-(`.env` 의 `PUBLIC_MEDIA_BASE`, GitHub Secrets 의 `PUBLIC_MEDIA_BASE`).
-개인 도메인을 붙이면 workers.dev 주소는 아예 노출되지 않는다.
+`scripts/verify-worker.sh` 는 로컬 `wrangler dev` 전용이다. 로컬 R2 에 파일을 적재하고
+서버를 직접 띄우기 때문에 배포본에는 그대로 쓸 수 없다. 배포본은 curl 로 따로 확인했다.
+
+| 항목 | 결과 |
+|---|---|
+| `/health` | `{"ok":true,"bucket":true}` |
+| Referer 없이 서명 요청 | 403 |
+| 다른 사이트 Referer | 403 |
+| 정상 서명 요청 | 200, 30분 만료 토큰 |
+| 서명된 재생목록 | 200, 조각 주소에 토큰 주입 확인 |
+| 토큰 없이 조각 접근 | 403 |
+| 위조 토큰 | 403 |
+| 만료 토큰 | 403 |
+| 정상 조각 | 200, 2.5MB |
+| Range 요청 | 206, 요청한 1024바이트 |
+| `init.mp4` | 200 |
+| 썸네일 640 / 1280 | 200 |
+| 썸네일 Referer 없이 | 403 |
+| CORS | `access-control-allow-origin: https://yes-eul-jeong.github.io` |
+
+썸네일 경로는 `/thumb/<id>/<파일명>` 이다. `/thumb/test-video/thumb-640.webp` 처럼
+파일명을 그대로 넣는다. 크기 숫자만 넣으면 404 가 난다.
+
+배포 중 wrangler 가 R2 바인딩 존재 여부를 확인할 권한이 없다는 경고를 낸다.
+토큰에 R2 조회 권한이 없어서 그런 것이고, 실제 요청이 객체를 200 으로 반환하므로 바인딩은 정상이다.
+같은 이유로 `wrangler r2 object get --remote` 도 403 이 난다. R2 를 CLI 로 직접 다뤄야 하면
+S3 자격증명(`R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY`)으로 aws-cli 를 쓴다.
+
+### 진행 중
+
+GitHub Secrets 에 `PUBLIC_MEDIA_BASE` 를 등록했다. 재배포한 뒤 휴대폰에서 실제 재생을
+확인하면 1단계가 끝난다.
 
 ## 2. 다른 환경에서 이어받기
 
@@ -66,7 +88,7 @@ cd gallery
 cp .env.example .env
 ```
 
-채울 값은 여섯 개다.
+채울 값은 일곱 개다.
 
 | 키 | 어디서 구하나 |
 |---|---|
@@ -76,7 +98,7 @@ cp .env.example .env
 | `R2_BUCKET` | `kickbox-media` |
 | `CLOUDFLARE_API_TOKEN` | 기존 `.env` 에서 복사. 잃었으면 재발급 (권한은 아래 참고) |
 | `MEDIA_SIGN_SECRET` | **기존 `.env` 에서 복사해야 한다.** 로컬에서 생성한 값이라 어디에도 백업이 없다 |
-| `PUBLIC_MEDIA_BASE` | 로컬 개발은 `http://localhost:8787`. 배포 후에는 Worker 주소 |
+| `PUBLIC_MEDIA_BASE` | 로컬 `wrangler dev` 를 쓸 때는 `http://localhost:8787`. 배포본을 볼 때는 `https://kickbox-media.sree-cloud.workers.dev` |
 
 값을 옮길 때는 대화창에 붙여넣지 말고 터미널에서 직접 넣는다.
 
@@ -125,88 +147,37 @@ docker compose -f docker/compose.yml up dev        # http://localhost:4321/galle
 
 ## 3. 다음에 할 일
 
-### 3.1 Worker 배포
+### 3.1 재배포와 실재생 확인 (1단계 마지막)
 
-서브도메인 문제는 해결됐으므로 아래 명령을 순서대로 실행하면 된다.
+GitHub Secret 은 등록만으로 반영되지 않는다. 다시 빌드해야 값이 HTML 에 들어간다.
+커밋을 푸시하거나, 저장소 Actions 탭에서 `사이트 배포` 워크플로를 `Run workflow` 로 직접 돌린다.
 
-**1) 배포**
-
-```bash
-docker compose -f docker/compose.yml run --rm app 'cd worker && npx wrangler deploy'
-```
-
-성공하면 주소가 출력된다. `kickbox-media.mpjeong0325.workers.dev` 형태다.
-
-**2) 서명 키를 Worker 시크릿으로 등록**
-
-`.env` 의 `MEDIA_SIGN_SECRET` 과 반드시 같은 값이어야 한다. 어긋나면 모든 재생이 403 이 된다.
-
-```bash
-docker compose -f docker/compose.yml run --rm app \
-  'grep "^MEDIA_SIGN_SECRET=" /app/.env | cut -d= -f2 | (cd worker && npx wrangler secret put MEDIA_SIGN_SECRET)'
-```
-
-**3) 등록 확인**
-
-```bash
-docker compose -f docker/compose.yml run --rm app 'cd worker && npx wrangler secret list'
-```
-
-**4) 배포된 Worker 검증**
-
-```bash
-WORKER=https://kickbox-media.mpjeong0325.workers.dev
-SITE=https://yes-eul-jeong.github.io
-
-# 헬스체크
-curl -s $WORKER/health
-
-# Referer 없이 서명 요청 → 403 이어야 한다
-curl -s -o /dev/null -w "%{http_code}\n" $WORKER/sign/test-video
-
-# 정상 서명 요청 → playlist URL 이 나와야 한다
-curl -s -H "Referer: $SITE/" $WORKER/sign/test-video
-
-# 토큰 없이 조각 접근 → 403 이어야 한다
-curl -s -o /dev/null -w "%{http_code}\n" -H "Referer: $SITE/" \
-  $WORKER/hls/test-video/seg0000.m4s
-```
-
-R2 에 `hls/test-video/` 샘플이 올라가 있으므로 그대로 확인할 수 있다.
-전체 12개 항목은 `scripts/verify-worker.sh` 의 BASE 를 위 주소로 바꿔 실행한다.
-
-**5) 로컬 .env 갱신**
-
-```bash
-# PUBLIC_MEDIA_BASE 를 배포 주소로 바꾼다
-```
-
-### 3.2 GitHub Secrets 등록
-
-저장소 Settings → Secrets and variables → Actions → New repository secret
-
-| 이름 | 값 |
-|---|---|
-| `PUBLIC_MEDIA_BASE` | `https://kickbox-media.mpjeong0325.workers.dev` |
-
-서브도메인을 바꿨다면 그 값으로 넣는다.
-
-이 값이 없으면 빌드는 통과하지만 사이트에 영상 재생기가 표시되지 않는다.
-등록 후 아무 커밋이나 푸시하면 재배포된다.
-
-### 3.3 실제 재생 확인
-
-휴대폰에서 https://yes-eul-jeong.github.io/gallery/ 를 열어 확인한다.
-이것이 1단계의 마지막 검증 기준이다.
+재배포 후 휴대폰에서 https://yes-eul-jeong.github.io/gallery/ 를 연다.
 
 - 끊김 없이 재생되는가
 - 구간 이동이 되는가
 - 개발자도구에서 조각 주소를 복사해 다른 탭에서 열면 403 이 나오는가
 
-### 3.4 그 다음 (2단계)
+페이지에 "PUBLIC_MEDIA_BASE 가 설정되지 않아 영상을 재생할 수 없습니다" 가 그대로 보이면
+시크릿이 빌드에 전달되지 않은 것이다. Environment secret 이 아니라 Repository secret 인지 확인한다.
+값을 쓰는 `build` job 에는 `environment:` 지정이 없어 Environment secret 은 읽히지 않는다.
 
-`development.md` 13절의 2단계부터 이어간다. 첫 화면과 경기 목록을 실제 디자인으로 만든다.
-그 전에 `product.md` 10절의 시안 비교를 한다.
+### 3.2 2단계
+
+`development.md` 13절의 2단계부터 이어간다.
+
+현재 `site/src/pages/index.astro` 는 스타일 없는 뼈대다. CSS 가 한 줄도 없고 경기 목록이
+`<ul>` 나열이며, 최근 5경기 접기와 하단 고정 연락처 버튼이 없다. 컴포넌트는 `VideoPlayer.vue`
+하나뿐이고 `RecordHeader`, `MediaCard`, `FilterBar`, `Lightbox` 는 아직 없다.
+`lib/media.ts` 와 `i18n/ko.ts` 도 없다. 페이지도 `index.astro` 하나뿐이다.
+
+전적 집계(`lib/record.ts`)와 콘텐츠 스키마는 동작한다.
+
+화면을 쓰기 전에 두 가지를 먼저 한다.
+
+1. 실제 프로필 값과 경기 기록 확정. 지금은 샘플 두 건이다
+2. `product.md` 10절의 첫 화면 시안 비교. 전적 표기 방식, 랭킹 위치, 인스타 버튼 형태,
+   벨트 자리, 승패 색은 글로 정해지지 않는다
 
 ## 4. 알아두면 좋은 것
 

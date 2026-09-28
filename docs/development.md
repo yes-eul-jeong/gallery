@@ -458,7 +458,17 @@ docker run --rm --env-file <자격증명> amazon/aws-cli \
 ```
 
 `.env` 에 계정 ID, 액세스 키, 시크릿 키, 버킷 이름을 채웠고 서명 키를 생성해 넣었다.
-남은 것은 GitHub Pages 활성화와 Worker 배포 후의 `PUBLIC_MEDIA_BASE` 다.
+**진행 상태 (2026-09-28)**
+
+GitHub Pages 를 켰고 Worker 를 배포했다. workers.dev 서브도메인은 이메일 노출을 피해
+`sree-cloud` 로 바꿨다. 배포 주소는 다음과 같다.
+
+```
+https://kickbox-media.sree-cloud.workers.dev
+```
+
+`MEDIA_SIGN_SECRET` 을 Worker 시크릿으로 등록했고, `.env` 와 GitHub Secrets 양쪽의
+`PUBLIC_MEDIA_BASE` 를 이 주소로 채웠다. 배포본 검증 결과는 `worklog.md` 1절에 있다.
 
 ### 내가 하는 것
 
@@ -522,7 +532,8 @@ Wrangler 로그인은 브라우저 인증이 필요하므로 그 시점에 실�
 
 검증 스크립트는 `scripts/verify-worker.sh` 와 `scripts/verify-playback.sh` 에 있다.
 
-**남은 확인**: 실제 휴대폰에서의 재생은 Worker 배포 후 가능하다.
+**남은 확인**: 실제 휴대폰에서의 재생. Worker 는 2026-09-28 에 배포했고 배포본 검증
+13항목을 통과했다. 사이트 재배포 후 휴대폰에서 열어보면 1단계가 끝난다.
 
 **인코딩 규격 조정**
 
@@ -542,7 +553,7 @@ Wrangler 로그인은 브라우저 인증이 필요하므로 그 시점에 실�
 - [ ] 첫 화면: 프로필, 전적, 랭킹, 연락처 고정 버튼
 - [ ] 경기 목록: 최근 5경기 노출, 나머지 접기
 - [x] 영상 재생기를 Vue 컴포넌트로 작성
-- [ ] GitHub Actions 배포
+- [x] GitHub Actions 배포
 
 **검증 기준**: 실제 URL을 휴대폰으로 열어 첫 화면에서 스크롤 없이 전적과 체급이 보인다.
 
