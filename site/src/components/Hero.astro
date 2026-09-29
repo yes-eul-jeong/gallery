@@ -9,11 +9,13 @@ interface Props {
 }
 const { profile: p, record } = Astro.props
 
+// 확정 경기 > 가능 시기 > 문의 순으로 내려간다.
+// 날짜가 없으면 "언제부터"가 아니라 "연락 주세요"가 맞다.
 const status = p.nextBout
   ? `${formatDate(p.nextBout.date)} 출전 예정`
   : p.availableFrom
     ? ui.availableFrom(p.availableFrom)
-    : null
+    : ui.askForBout
 ---
 
 <section class="hero rise is-in">

@@ -1,11 +1,22 @@
 ---
+/**
+ * 한 자리에 세 가지 상태가 들어간다.
+ *   확정 경기        날짜를 크게 쓰고 빛이 훑는다
+ *   가능 시기 명시    언제부터 뛸 수 있는지
+ *   아무것도 없음     연락을 요청한다 (기본)
+ *
+ * 마지막이 기본값이다. 날짜를 박아두면 지날 때마다 고쳐야 하고,
+ * 지난 날짜가 남아 있으면 오히려 관리를 안 하는 선수로 읽힌다.
+ */
 import type { CollectionEntry } from 'astro:content'
 import { ui, formatDate } from '../i18n/ko'
+import { url } from '../lib/media'
 
 interface Props { profile: CollectionEntry<'profile'>['data'] }
 const { profile: p } = Astro.props
 
 const next = p.nextBout
+const genderText = p.gender === 'female' ? '여자' : '남자'
 ---
 
 <section class="section">
@@ -20,12 +31,21 @@ const next = p.nextBout
           {[next.weightClass, next.rounds].filter(Boolean).join(' · ')}
         </div>
       </div>
-    ) : (
+    ) : p.availableFrom ? (
       <div class="bout-status bout-status--available">
         <div class="bout-status__date">{p.availableFrom} 부터</div>
         <div class="bout-status__event">{ui.available}</div>
         {p.availableNote && <div class="bout-status__meta">{p.availableNote}</div>}
       </div>
+    ) : (
+      <a class="bout-status bout-status--available bout-status--ask" href={url('/#contact')}>
+        <div class="bout-status__date">출전 문의</div>
+        <div class="bout-status__event">
+          {genderText} {p.weightClass} · 국내 · 해외 모두 가능
+        </div>
+        <div class="bout-status__meta">일정은 연락 주시면 바로 답합니다</div>
+        <span class="bout-status__go">→</span>
+      </a>
     )}
   </div>
 </section>

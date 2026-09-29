@@ -27,6 +27,7 @@ export const ui = {
   proRecord: 'PRO RECORD',
   availableFrom: (d: string) => `${d} 이후 출전 가능`,
   available: '출전 가능',
+  askForBout: '출전 문의 받는 중',
   countUnit: (n: number) => `${n}개`,
 } as const
 

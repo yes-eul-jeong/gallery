@@ -1,6 +1,6 @@
 # 작업 기록과 인계
 
-최종 갱신: 2026-09-28 (Worker 배포 완료)
+최종 갱신: 2026-09-29 (2차 배포 · 디자인과 링크 미리보기 반영)
 
 다른 환경에서 이어서 작업할 때 이 문서부터 읽는다.
 
@@ -15,6 +15,8 @@
 | 1단계 | 영상 인코딩 → HLS 분할 → R2 업로드 → Worker 서명 → 재생. 로컬 검증 12항목 통과 |
 | 사이트 배포 | GitHub Actions → Pages. https://yes-eul-jeong.github.io/gallery/ 동작 확인 |
 | Worker 배포 | workers.dev 서브도메인을 `sree-cloud` 로 바꾼 뒤 배포. 배포본 검증 13항목 통과 |
+| 2단계 디자인 | 시안 확정 후 Astro 로 이관. 색·타이포·컴포넌트·SCSS 토큰 |
+| 링크 미리보기 | Open Graph 태그와 1200×630 이미지 |
 
 ### workers.dev 서브도메인
 
@@ -66,10 +68,49 @@ Settings 탭에는 없다.
 같은 이유로 `wrangler r2 object get --remote` 도 403 이 난다. R2 를 CLI 로 직접 다뤄야 하면
 S3 자격증명(`R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY`)으로 aws-cli 를 쓴다.
 
+### 디자인 결정 (2026-09-29)
+
+레퍼런스 세 곳을 뜯어보고 정했다.
+
+| 사이트 | 가져온 것 |
+|---|---|
+| ONE Championship (Janet Todd) | 화면 구성. 이름 → 전적 → 다음 경기 → 경기 목록 → Breakdown |
+| waverunmedia.com | 영상 카드. 글자가 카드 밖에 있다가 호버하면 영상이 커지며 덮는다 |
+| nickho-motorsports.nl | 투명도 단계 토큰, 배경 영상, Anton 같은 압축 헤드라인 |
+
+**색**
+
+```
+배경   #0A0A0A
+텍스트 #FFFFFF
+보조   #8E8E96   6.1:1
+흐림   .55 투명도 · 패배 행
+액센트 #00FF85   14.7:1
+```
+
+액센트는 선수 가운과 털에서 뽑았다. 사진 속 초록이 색상각 150° 근처였고
+후보 셋 중 `#00FF85`(151°)가 일치했다. 선수 고유색이 그대로 사이트 색이다.
+
+지켜야 할 규칙 둘.
+
+1. 초록 위 글자는 반드시 검정이다. 흰색은 1.4:1 로 읽히지 않는다
+2. 패배 행 투명도는 `.55` 아래로 내리지 않는다. 본문 대비 4.5:1 에 미달한다
+
+**폰트**: 한글 Pretendard, 영문과 숫자 Satoshi.
+
+**연출 범위**: 히어로에만 둔다. 그 아래는 훑는 영역이라 스크롤할 때마다
+요소가 떠오르면 읽는 속도만 느려진다. 관성 스크롤(Lenis)은 넣었다가 뺐다.
+
+**승패 표기**: 색으로 가르지 않는다. 초록은 액센트 전용이고 승패는
+글자(`W`/`L`)와 명암으로 구분한다.
+
 ### 진행 중
 
-GitHub Secrets 에 `PUBLIC_MEDIA_BASE` 를 등록했다. 재배포한 뒤 휴대폰에서 실제 재생을
-확인하면 1단계가 끝난다.
+비공개로 배포돼 있다. 데이터가 샘플이라 검색 색인만 막았다.
+
+```
+https://yes-eul-jeong.github.io/gallery/
+```
 
 ## 2. 다른 환경에서 이어받기
 
@@ -147,37 +188,77 @@ docker compose -f docker/compose.yml up dev        # http://localhost:4321/galle
 
 ## 3. 다음에 할 일
 
-### 3.1 재배포와 실재생 확인 (1단계 마지막)
+순서가 정해져 있다. 위에서부터 한다.
 
-GitHub Secret 은 등록만으로 반영되지 않는다. 다시 빌드해야 값이 HTML 에 들어간다.
-커밋을 푸시하거나, 저장소 Actions 탭에서 `사이트 배포` 워크플로를 `Run workflow` 로 직접 돌린다.
+### 3.1 업로드 CLI 를 스키마에 맞춘다 (선결)
 
-재배포 후 휴대폰에서 https://yes-eul-jeong.github.io/gallery/ 를 연다.
+**영상을 하나도 올릴 수 없는 상태다.** 사이트 스키마는 바뀌었는데
+파이프라인이 옛 스키마를 그대로 쓴다.
 
-- 끊김 없이 재생되는가
-- 구간 이동이 되는가
-- 개발자도구에서 조각 주소를 복사해 다른 탭에서 열면 403 이 나오는가
+```
+pipeline/src/content.ts:13   level: 'pro' | 'amateur'
+pipeline/src/cli.ts:79       { value: 'amateur', label: '아마추어' }
+```
 
-페이지에 "PUBLIC_MEDIA_BASE 가 설정되지 않아 영상을 재생할 수 없습니다" 가 그대로 보이면
-시크릿이 빌드에 전달되지 않은 것이다. Environment secret 이 아니라 Repository secret 인지 확인한다.
-값을 쓰는 `build` job 에는 `environment:` 지정이 없어 Environment secret 은 읽히지 않는다.
+고칠 것.
 
-### 3.2 2단계
+- `level` 에 `semipro` 추가. 선택지와 타입 양쪽
+- `video` 에 `preview`(호버용 짧은 클립), `poster`(목록 썸네일) 필드 추가
+- 인코딩할 때 2.5초 무음 클립과 포스터를 같이 뽑아 `site/public/media/` 에 넣기
+- 사진 일괄 등록. `site/src/content/photos/index.json` 에 붙이는 방식
 
-`development.md` 13절의 2단계부터 이어간다.
+클립과 포스터를 만드는 ffmpeg 명령은 이미 검증했다.
 
-현재 `site/src/pages/index.astro` 는 스타일 없는 뼈대다. CSS 가 한 줄도 없고 경기 목록이
-`<ul>` 나열이며, 최근 5경기 접기와 하단 고정 연락처 버튼이 없다. 컴포넌트는 `VideoPlayer.vue`
-하나뿐이고 `RecordHeader`, `MediaCard`, `FilterBar`, `Lightbox` 는 아직 없다.
-`lib/media.ts` 와 `i18n/ko.ts` 도 없다. 페이지도 `index.astro` 하나뿐이다.
+```bash
+# 2.5초 무음 미리보기
+ffmpeg -ss <시작> -t 2.5 -i <원본> -vf "scale=640:-2,fps=24" -an \
+  -c:v libx264 -crf 30 -preset veryfast -movflags +faststart -pix_fmt yuv420p out.mp4
 
-전적 집계(`lib/record.ts`)와 콘텐츠 스키마는 동작한다.
+# 포스터
+ffmpeg -ss <시작> -i <원본> -vframes 1 -vf "scale=640:-2" -q:v 5 out.jpg
+```
 
-화면을 쓰기 전에 두 가지를 먼저 한다.
+### 3.2 실제 영상 업로드
 
-1. 실제 프로필 값과 경기 기록 확정. 지금은 샘플 두 건이다
-2. `product.md` 10절의 첫 화면 시안 비교. 전적 표기 방식, 랭킹 위치, 인스타 버튼 형태,
-   벨트 자리, 승패 색은 글로 정해지지 않는다
+편집과 가공은 직접 한다. 원본이 준비되면 아래 한 줄로 끝난다.
+
+```bash
+docker compose -f docker/compose.yml run --rm app 'npm run add /media/<파일>'
+```
+
+지금은 모든 경기와 훈련이 R2 의 `test-video` 를 가리킨다.
+호버 미리보기 클립 5개도 테스트 영상에서 잘라낸 것이다.
+
+### 3.3 실제 데이터 교체
+
+| 항목 | 지금 | 필요 |
+|---|---|---|
+| 경기 5건 | `상대 선수`, `대회명` | 날짜 · 대회명 · 상대 · 소속 · 결과 · 결정 방식 |
+| 프로 전적 | 2-0 (경기 2건) | 프로 3전이므로 1건 추가 |
+| 이메일 | 비어 있음 | `profile.json` 의 `email` |
+| 사진 14장 | 실제 2장, 나머지는 테스트 영상 프레임 | 실제 경기 사진 |
+| `og-default.jpg` | 입장 사진에서 자른 임시본 | 직접 고른 1200×630 |
+
+전적은 경기 JSON 을 세어 만든다. 따로 적는 숫자가 없으므로
+경기를 넣으면 첫 화면 숫자가 따라 바뀐다.
+
+### 3.4 공개 전환
+
+지금은 `noindex` 만 걸려 있다. 공개할 때 지울 곳은 한 군데다.
+
+```
+site/src/layouts/Base.astro   <meta name="robots" content="noindex, nofollow" />
+```
+
+`robots.txt` 는 이미 열려 있다. 막으면 안 되는 이유는 4.6 에 적었다.
+
+### 3.5 남은 화면
+
+`development.md` 13절 4단계에 있다. 급하지 않다.
+
+- 대회별 보기 (`event/[slug]`)
+- 사진 일괄 등록 화면
+- 인코딩 결과 로컬 캐시
 
 ## 4. 알아두면 좋은 것
 
@@ -217,6 +298,36 @@ docker compose -f docker/compose.yml up -d worker
 docker compose -f docker/compose.yml run --rm app 'bash scripts/verify-playback.sh'
 ```
 
+### 4.6 robots.txt 를 막으면 안 되는 이유
+
+`Disallow: /` 는 접근 제어가 아니다. 크롤러에게 하는 부탁이고,
+주소를 아는 사람은 그대로 연다.
+
+막으면 두 가지가 같이 죽는다.
+
+1. 크롤러가 페이지를 못 읽으니 `noindex` 도 못 본다. 외부 링크만 보고
+   주소가 색인되는 경우가 생긴다
+2. 카카오톡 · 슬랙의 링크 미리보기가 안 뜬다. Open Graph 를 읽을 수 없다
+
+검색 노출 차단이 목적이면 `noindex` 만 쓴다.
+
+**모르는 사람의 접근 차단은 GitHub Pages 로 불가능하다.** 완전 공개 호스팅이다.
+정말 막으려면 Worker 앞에 비밀번호를 걸거나 Cloudflare Access 를 붙여야 한다.
+
+### 4.7 출전 가능 시기를 날짜로 박지 않는다
+
+`profile.json` 의 `availableFrom` 을 비워두면 첫 화면이 날짜 대신
+`출전 문의` 카드로 바뀐다. 날짜를 적으면 지날 때마다 고쳐야 하고,
+지난 날짜가 남아 있으면 관리를 안 하는 선수로 읽힌다.
+
+확정된 경기가 잡히면 `nextBout` 을 채운다. 그때만 날짜가 크게 뜬다.
+
+### 4.8 브라우저 기본 마진
+
+`figure` 는 좌우 40px, 위아래 1em 을 기본으로 갖는다. `p` 는 위아래 1em 이다.
+`margin-bottom` 만 지정하면 나머지가 그대로 남는다. 갤러리에서 사진이
+390px 가 아니라 87px 로 나온 원인이었다. `margin` 을 통째로 지정한다.
+
 ## 5. 현재 파일 구조
 
 ```
@@ -224,9 +335,27 @@ docs/
   product.md        서비스 기획
   development.md    개발 가이드, 구현 순서, 사전 준비
   worklog.md        이 문서
-site/               Astro 7 + Vue. 콘텐츠 스키마, 전적 집계, 재생기
+site/
+  public/media/     사진 · 호버용 클립 · 포스터 · OG 이미지
+  src/
+    styles/         SCSS. 토큰 · 믹스인 · 컴포넌트 10개
+    components/     화면 조각 12개
+    layouts/        Base.astro — 메타 태그와 껍데기
+    pages/          index · videos · gallery · match/[slug] · training/[slug]
+    content/        경기 · 훈련 · 사진 · 프로필 JSON
+    lib/            record.ts(전적 집계) · media.ts(주소 생성)
+    i18n/ko.ts      화면 문자열
+    scripts/app.js  호버 미리보기 · 부채 · 슬라이더 · 필터 · 라이트박스
 pipeline/           ffprobe, 인코딩, 썸네일, R2 업로드, 대화형 CLI
 worker/             서명 발급과 검증, Referer 검사, m3u8 재작성
 scripts/            검증 스크립트
 docker/             node 22 + ffmpeg + curl
 ```
+
+## 6. 미디어를 어디에 두는가
+
+| | 위치 | 이유 |
+|---|---|---|
+| 풀 경기 영상 | R2 + Worker | 보호 대상. 서명 토큰과 Referer 검사를 거친다 |
+| 호버용 2.5초 클립 | GitHub Pages | 저화질 조각이라 보호할 것이 없다. 첫 화면에서 서명을 다섯 번 받으면 느려진다 |
+| 사진 · OG 이미지 | GitHub Pages | 히어로와 링크 미리보기에 즉시 떠야 한다 |

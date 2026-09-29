@@ -1,21 +1,53 @@
 ---
 /**
  * 모든 페이지의 껍데기.
- * 지금은 비공개 배포라 검색 수집을 막는다. 공개할 때 noindex 를 지운다.
+ *
+ * 링크 미리보기가 이 사이트의 첫인상이다. 프로모터에게 카톡으로
+ * 주소를 보내면 펼침 카드가 먼저 뜨고, 거기서 이미 판단이 시작된다.
+ * 그래서 Open Graph 를 페이지마다 다르게 채운다.
+ *
+ * 지금은 비공개 배포라 noindex 를 건다. robots.txt 는 열어둔다.
+ * 막아버리면 크롤러가 페이지를 못 읽어 noindex 도 못 보고,
+ * 메신저 미리보기까지 같이 죽는다.
  */
 import '../styles/main.scss'
 import TopBar from '../components/TopBar.astro'
 import { getEntry } from 'astro:content'
+import { asset } from '../lib/media'
 
 interface Props {
   title: string
+  /** 펼침 카드에 들어갈 한 줄. 비우면 프로필에서 만든다 */
   description?: string
+  /** public/media 아래 파일명. 비우면 기본 이미지 */
+  ogImage?: string
   here?: 'home' | 'videos' | 'photos'
 }
 
-const { title, description, here } = Astro.props
+const { title, description, ogImage, here } = Astro.props
+
 const profile = await getEntry('profile', 'main')
 if (!profile) throw new Error('profile.json 에 main 항목이 없습니다')
+const p = profile.data
+
+const genderText = p.gender === 'female' ? '여자' : '남자'
+
+const fallbackDescription = [
+  `${p.gym} · ${genderText} ${p.weightClass} · ${p.height}cm`,
+  p.nextBout
+    ? `${p.nextBout.date} ${p.nextBout.event} 출전 예정`
+    : p.availableFrom
+      ? `${p.availableFrom} 이후 출전 가능`
+      : '출전 문의 받는 중',
+]
+  .filter(Boolean)
+  .join(' · ')
+
+const desc = description ?? fallbackDescription
+
+// 절대 주소여야 크롤러가 읽는다. 상대 경로는 무시된다.
+const canonical = new URL(Astro.url.pathname, Astro.site)
+const image = new URL(asset(ogImage ?? 'og-default.jpg'), Astro.site)
 ---
 
 <!DOCTYPE html>
@@ -23,9 +55,33 @@ if (!profile) throw new Error('profile.json 에 main 항목이 없습니다')
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex, nofollow" />
+
     <title>{title}</title>
-    {description && <meta name="description" content={description} />}
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={canonical} />
+
+    <!-- 비공개 배포. 공개 전환 시 이 줄을 지운다 -->
+    <meta name="robots" content="noindex, nofollow" />
+
+    <!-- 링크 미리보기 -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={`${p.name} · 파이트 레주메`} />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${p.name} 경기 사진`} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={desc} />
+    <meta name="twitter:image" content={image} />
+
+    <meta name="theme-color" content="#0A0A0A" />
+
     <link
       rel="stylesheet"
       href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap"
@@ -36,7 +92,7 @@ if (!profile) throw new Error('profile.json 에 main 항목이 없습니다')
     />
   </head>
   <body>
-    <TopBar profile={profile.data} here={here} />
+    <TopBar profile={p} here={here} />
     <slot />
     <script>
       import '../scripts/app.js'

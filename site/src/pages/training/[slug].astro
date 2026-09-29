@@ -14,7 +14,11 @@ const { item } = Astro.props
 const d = item.data
 ---
 
-<Base title={`${d.title} · 황승하`} here="videos">
+<Base
+  title={`${d.title} · 황승하`}
+  description={[trainingLabel[d.type], formatDate(d.date), d.place].filter(Boolean).join(' · ')}
+  here="videos"
+>
   <main>
     <div class="page-head">
       <div class="container">

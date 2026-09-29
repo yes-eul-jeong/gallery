@@ -13,7 +13,7 @@ import Contact from '../components/Contact.astro'
 import Lightbox from '../components/Lightbox.astro'
 import { tally, byDateDesc } from '../lib/record'
 import { url } from '../lib/media'
-import { ui, levelLabel, methodLabel, resultLabel, trainingLabel, formatDate, formatDuration } from '../i18n/ko'
+import { ui, levelLabel, genderLabel, methodLabel, resultLabel, trainingLabel, formatDate, formatDuration } from '../i18n/ko'
 
 const profile = await getEntry('profile', 'main')
 if (!profile) throw new Error('profile.json 에 main 항목이 없습니다')
@@ -32,6 +32,12 @@ const all = {
   ko: pro.ko + semipro.ko + amateur.ko,
   noContest: pro.noContest + semipro.noContest + amateur.noContest,
 }
+
+// 펼침 카드 문구. 경기가 없는 등급은 넣지 않는다
+const semiproText = semipro.win + semipro.loss > 0
+  ? `${levelLabel.semipro} ${semipro.win}-${semipro.loss}` : null
+const amateurText = amateur.win + amateur.loss > 0
+  ? `${levelLabel.amateur} ${amateur.win}-${amateur.loss}` : null
 
 // 첫 화면에는 최근 5경기만. 전부 늘어놓으면 최근 경기가 묻힌다.
 const recent = matches.slice(0, 5)
@@ -84,7 +90,21 @@ fanCards.push({
 })
 ---
 
-<Base title={`${p.name} · 파이트 레주메`} here="home">
+<Base
+  title={`${p.name} · ${levelLabel.pro} 킥복싱 ${genderLabel[p.gender]} ${p.weightClass}`}
+  description={[
+    `${levelLabel.pro} ${pro.win}-${pro.loss}`,
+    semiproText,
+    amateurText,
+    p.gym,
+    p.nextBout
+      ? `${p.nextBout.date} ${p.nextBout.event} 출전 예정`
+      : p.availableFrom
+        ? `${p.availableFrom} 이후 출전 가능`
+        : '출전 문의 받는 중',
+  ].filter(Boolean).join(' · ')}
+  here="home"
+>
   <main>
     <Hero profile={p} record={pro} />
     <Record pro={pro} semipro={semipro} amateur={amateur} />

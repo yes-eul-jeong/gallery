@@ -133,7 +133,11 @@ const profile = defineCollection({
         rounds: z.string().optional(),
       })
       .optional(),
-    /** 확정 경기가 없을 때 언제부터 뛸 수 있는지 */
+    /**
+     * 확정 경기가 없을 때 언제부터 뛸 수 있는지.
+     * 날짜를 적으면 지날 때마다 고쳐야 한다. 비워두면 화면이
+     * 날짜 대신 연락을 요청하는 문구로 바뀐다.
+     */
     availableFrom: z.string().optional(),
     availableNote: z.string().optional(),
     instagram: z.string(),

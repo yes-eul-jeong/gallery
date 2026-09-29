@@ -10,7 +10,11 @@ const kinds = Object.entries(photoKindLabel)
   .filter(([k]) => photos.some((p) => p.data.kind === k))
 ---
 
-<Base title="사진 · 황승하" here="photos">
+<Base
+  title="사진 · 황승하"
+  description={`경기 · 계체 · 시상 · 훈련 사진 ${photos.length}장`}
+  here="photos"
+>
   <main>
     <div class="page-head">
       <div class="container">

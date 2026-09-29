@@ -109,6 +109,31 @@
     margin-top: s(1);
   }
 
+  // 연락을 요청하는 상태. 누르면 연락처로 내려간다.
+  &--ask {
+    display: block;
+    cursor: pointer;
+    padding-right: s(8);
+    transition: border-color d(fast), background d(fast);
+
+    &:hover {
+      border-color: var(--c-accent-border);
+      background: linear-gradient(135deg, var(--c-accent-wash), transparent 62%);
+
+      .bout-status__go { color: c(accent); transform: translateX(4px); }
+    }
+  }
+
+  &__go {
+    position: absolute;
+    right: s(5);
+    top: 50%;
+    margin-top: -10px;
+    font-size: 18px;
+    color: c(dim);
+    transition: color d(fast), transform d(fast) e(out);
+  }
+
   // 확정 경기가 없는 상태. 소리를 낮춘다.
   // 예정 경기와 같은 무게로 보이면 매치메이커가 잘못 읽는다.
   &--available {

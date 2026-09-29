@@ -49,7 +49,11 @@ const kinds = [
 ].filter((k) => rows.some((r) => r.filter === k.key))
 ---
 
-<Base title={`영상 · 황승하`} here="videos">
+<Base
+  title="영상 · 황승하"
+  description={`경기와 훈련 영상 ${rows.length}편. 풀 경기를 그대로 올린다.`}
+  here="videos"
+>
   <main>
     <div class="page-head">
       <div class="container">

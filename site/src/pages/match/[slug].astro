@@ -34,7 +34,16 @@ const spec = [
 ].filter(([, v]) => v) as [string, string, boolean?][]
 ---
 
-<Base title={`${d.event} · ${formatDate(d.date)} · 황승하`}>
+<Base
+  title={`${d.event} · ${resultLabel[d.result]} ${methodLabel[d.method]} · 황승하`}
+  description={[
+    formatDate(d.date),
+    levelLabel[d.level],
+    d.weightClass,
+    `vs ${d.opponent.name}`,
+    `${methodLabel[d.method]} ${resultLabel[d.result]}`,
+  ].join(' · ')}
+>
   <main>
     <div class="page-head">
       <div class="container">
