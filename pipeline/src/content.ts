@@ -6,15 +6,19 @@ export interface VideoRef {
   key: string
   duration: number
   resolution: Resolution
+  /** 호버 미리보기용 짧은 클립. site/public/media 아래 파일명 */
+  preview?: string
+  /** 목록 썸네일. site/public/media 아래 파일명 */
+  poster?: string
 }
 
 export interface MatchEntry {
   date: string
-  level: 'pro' | 'amateur'
+  level: 'pro' | 'semipro' | 'amateur'
   event: string
   rule: 'k1' | 'muaythai' | 'oriental'
   weightClass: string
-  opponent: { name: string; gym?: string }
+  opponent: { name: string; gym?: string; country?: string }
   rounds: string
   result: 'win' | 'loss' | 'draw' | 'nc'
   method: 'ko' | 'tko' | 'unanimous' | 'majority' | 'split' | 'retire'
@@ -31,6 +35,7 @@ export interface TrainingEntry {
   type: 'sparring' | 'mitt' | 'bag' | 'technique' | 'conditioning'
   title: string
   description?: string
+  place?: string
   video?: VideoRef
   photos: string[]
 }

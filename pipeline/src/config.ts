@@ -35,7 +35,29 @@ export const paths = {
   /** 인코딩 중간 산출물. 저장소에 넣지 않는다 */
   cache: resolve(repoRoot, 'cache'),
   content: resolve(repoRoot, 'site/src/content'),
+  /**
+   * 사이트가 그대로 내보내는 미디어.
+   * 호버 미리보기와 목록 썸네일은 여기에 둔다. 저화질 조각이라
+   * 보호할 것이 없고, 첫 화면에서 서명을 여러 번 받으면 느려진다.
+   */
+  publicMedia: resolve(repoRoot, 'site/public/media'),
 }
+
+/**
+ * 호버 미리보기 규격.
+ *
+ * 마우스를 올린 동안만 도는 조각이라 화질보다 용량이 중요하다.
+ * 소리는 넣지 않는다. 링크를 받은 사람이 조용한 곳에서 연다.
+ */
+export const preview = {
+  seconds: 2.5,
+  width: 640,
+  fps: 24,
+  crf: 30,
+}
+
+/** 목록 썸네일 가로 크기 */
+export const posterWidth = 640
 
 export type Resolution = '1080p' | '720p'
 

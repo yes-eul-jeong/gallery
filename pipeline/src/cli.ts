@@ -9,7 +9,7 @@ import * as p from '@clack/prompts'
 import { rm, stat } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import { paths, pickResolution } from './config.js'
-import { encodeToHls, extractThumbnails } from './encode.js'
+import { encodeToHls, extractPreview, extractThumbnails } from './encode.js'
 import { load as loadHistory, remember, type History } from './history.js'
 import { probe } from './probe.js'
 import { makeId } from './slug.js'
@@ -64,6 +64,19 @@ async function pickOrType(label: string, previous: string[], initial?: string): 
   ).trim()
 }
 
+/** 12:34 → 754. 형식이 어긋나면 null */
+function parseMark(value: string): number | null {
+  const m = value.trim().match(/^(\d+):([0-5]\d)$/)
+  if (!m) return null
+  return Number(m[1]) * 60 + Number(m[2])
+}
+
+/** 754 → 12:34 */
+function formatMark(sec: number): string {
+  const s = Math.max(0, Math.round(sec))
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
 /** 파일 수정 시각에서 촬영 날짜를 추정한다 */
 async function guessDate(file: string): Promise<string> {
   const info = await stat(file)
@@ -71,11 +84,13 @@ async function guessDate(file: string): Promise<string> {
 }
 
 async function askMatch(history: History, date: string): Promise<MatchEntry> {
+  // 셋을 합산하지 않는다. 등급이 다른 전적을 섞어 적는 것은 결례로 본다.
   const level = required(
     await p.select({
-      message: '프로 경기인가요?',
+      message: '경기 등급',
       options: [
         { value: 'pro' as const, label: '프로' },
+        { value: 'semipro' as const, label: '세미프로' },
         { value: 'amateur' as const, label: '아마추어' },
       ],
     }),
@@ -104,6 +119,11 @@ async function askMatch(history: History, date: string): Promise<MatchEntry> {
 
   const opponentGym = required(await p.text({ message: '상대 소속 (없으면 엔터)' })).trim()
   if (opponentGym) await remember(history, 'gyms', opponentGym)
+
+  // 해외 경기는 국적이 붙어야 매치메이커가 수준을 가늠한다
+  const opponentCountry = required(
+    await p.text({ message: '상대 국적 (국내면 엔터)' }),
+  ).trim()
 
   const rounds = await pickOrType('라운드 형식', history.roundFormats, '3R 3분')
   await remember(history, 'roundFormats', rounds)
@@ -173,7 +193,11 @@ async function askMatch(history: History, date: string): Promise<MatchEntry> {
     event,
     rule,
     weightClass,
-    opponent: opponentGym ? { name: opponentName, gym: opponentGym } : { name: opponentName },
+    opponent: {
+      name: opponentName,
+      ...(opponentGym ? { gym: opponentGym } : {}),
+      ...(opponentCountry ? { country: opponentCountry } : {}),
+    },
     rounds,
     result,
     method,
@@ -203,9 +227,17 @@ async function askTraining(date: string): Promise<TrainingEntry> {
     await p.text({ message: '제목', validate: notEmpty }),
   ).trim()
 
+  const place = required(await p.text({ message: '장소 (없으면 엔터)' })).trim()
   const description = required(await p.text({ message: '설명 (없으면 엔터)' })).trim()
 
-  return { date, type, title, ...(description ? { description } : {}), photos: [] }
+  return {
+    date,
+    type,
+    title,
+    ...(place ? { place } : {}),
+    ...(description ? { description } : {}),
+    photos: [],
+  }
 }
 
 async function main(): Promise<void> {
@@ -252,6 +284,18 @@ async function main(): Promise<void> {
   )
 
   const entry = kind === 'match' ? await askMatch(history, date) : await askTraining(date)
+
+  // 썸네일과 호버 미리보기가 시작할 지점.
+  // 앞머리는 입장과 소개라 볼 것이 없고, 끝은 결과를 미리 드러낸다.
+  const defaultMark = formatMark(info.durationSec * 0.4)
+  const mark = required(
+    await p.text({
+      message: '대표 장면 시점 (mm:ss, 엔터=40% 지점)',
+      initialValue: defaultMark,
+      validate: (v) => (!v || parseMark(v) !== null ? undefined : 'mm:ss 형식으로 입력하세요'),
+    }),
+  ).trim()
+  const markSec = parseMark(mark) ?? undefined
   const id = makeId(date, kind === 'match' ? (entry as MatchEntry).event : (entry as TrainingEntry).title)
   const workDir = join(paths.cache, id)
 
@@ -262,8 +306,9 @@ async function main(): Promise<void> {
   const encoded = await encodeToHls(input, workDir, resolution, info, (ratio) => {
     spinner.message(`인코딩 ${Math.round(ratio * 100)}%`)
   })
-  await extractThumbnails(input, workDir, info)
-  spinner.stop(`인코딩 완료 · 조각 ${encoded.segmentCount}개`)
+  await extractThumbnails(input, workDir, info, markSec)
+  const still = await extractPreview(input, id, info, markSec)
+  spinner.stop(`인코딩 완료 · 조각 ${encoded.segmentCount}개 · 미리보기 ${still.preview}`)
 
   spinner.start('업로드')
   await removePrefix(`hls/${id}`)
@@ -272,7 +317,13 @@ async function main(): Promise<void> {
   })
   spinner.stop(`업로드 완료 · ${(uploaded.bytes / 1024 / 1024).toFixed(1)}MB`)
 
-  const video = { key: id, duration: Math.round(info.durationSec), resolution }
+  const video = {
+    key: id,
+    duration: Math.round(info.durationSec),
+    resolution,
+    preview: still.preview,
+    poster: still.poster,
+  }
   const path =
     kind === 'match'
       ? await writeMatch(id, { ...(entry as MatchEntry), video })

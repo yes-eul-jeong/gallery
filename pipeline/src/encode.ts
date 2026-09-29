@@ -1,7 +1,15 @@
 import { spawn } from 'node:child_process'
 import { mkdir, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { audioBitrate, resolveEncodeSettings, segmentSeconds, type Resolution } from './config.js'
+import {
+  audioBitrate,
+  paths,
+  posterWidth,
+  preview,
+  resolveEncodeSettings,
+  segmentSeconds,
+  type Resolution,
+} from './config.js'
 import type { MediaInfo } from './probe.js'
 
 export interface EncodeResult {
@@ -146,4 +154,64 @@ export async function extractThumbnails(
   }
 
   return { grid, detail }
+}
+
+/**
+ * 호버 미리보기와 목록 썸네일을 뽑는다.
+ *
+ * 사이트가 그대로 내보내는 파일이라 `site/public/media` 에 쓴다.
+ * 여러 영상을 올려도 부딪히지 않게 파일명에 id 를 넣는다.
+ *
+ * 시작 지점은 기본이 40% 다. 앞머리는 입장과 소개라 볼 것이 없고,
+ * 끝은 결과를 미리 드러낸다. KO 장면처럼 특정 순간을 쓰고 싶으면
+ * 초를 직접 지정한다.
+ */
+export async function extractPreview(
+  input: string,
+  id: string,
+  info: MediaInfo,
+  atSecond?: number,
+): Promise<{ preview: string; poster: string }> {
+  await mkdir(paths.publicMedia, { recursive: true })
+
+  // 클립이 영상 끝을 넘어가지 않게 자른다
+  const latest = Math.max(0, info.durationSec - preview.seconds)
+  const seek = Math.min(atSecond ?? info.durationSec * 0.4, latest)
+
+  const clipName = `${id}-preview.mp4`
+  const posterName = `${id}-poster.jpg`
+  const clipPath = join(paths.publicMedia, clipName)
+  const posterPath = join(paths.publicMedia, posterName)
+
+  await ffmpeg([
+    '-hide_banner',
+    '-nostdin',
+    '-y',
+    '-ss', seek.toFixed(3),
+    '-t', String(preview.seconds),
+    '-i', input,
+    '-vf', `scale=${preview.width}:-2,fps=${preview.fps}`,
+    // 소리를 뺀다. 무음이어야 브라우저가 자동 재생을 허용한다.
+    '-an',
+    '-c:v', 'libx264',
+    '-crf', String(preview.crf),
+    '-preset', 'veryfast',
+    '-movflags', '+faststart',
+    '-pix_fmt', 'yuv420p',
+    clipPath,
+  ])
+
+  await ffmpeg([
+    '-hide_banner',
+    '-nostdin',
+    '-y',
+    '-ss', seek.toFixed(3),
+    '-i', input,
+    '-frames:v', '1',
+    '-vf', `scale=${posterWidth}:-2:flags=lanczos`,
+    '-q:v', '4',
+    posterPath,
+  ])
+
+  return { preview: clipName, poster: posterName }
 }

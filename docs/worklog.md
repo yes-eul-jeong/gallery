@@ -190,33 +190,30 @@ docker compose -f docker/compose.yml up dev        # http://localhost:4321/galle
 
 순서가 정해져 있다. 위에서부터 한다.
 
-### 3.1 업로드 CLI 를 스키마에 맞춘다 (선결)
+### 3.1 업로드 CLI (완료, 2026-09-29)
 
-**영상을 하나도 올릴 수 없는 상태다.** 사이트 스키마는 바뀌었는데
-파이프라인이 옛 스키마를 그대로 쓴다.
+사이트 스키마와 맞췄다. 이제 세미프로 경기를 저장해도 빌드가 통과한다.
+
+| 고친 것 | 내용 |
+|---|---|
+| `level` | `semipro` 추가. 선택지와 타입 양쪽 |
+| `opponent.country` | 해외 경기는 국적이 붙어야 수준을 가늠한다 |
+| `training.place` | 훈련 장소 |
+| `video.preview` / `poster` | 호버 미리보기와 목록 썸네일 |
+| 대표 장면 시점 | `mm:ss` 로 묻는다. 엔터를 치면 40% 지점 |
+
+**대표 장면을 40% 로 잡은 이유**: 앞머리는 입장과 소개라 볼 것이 없고,
+끝은 결과를 미리 드러낸다. KO 장면을 쓰고 싶으면 시점을 직접 넣는다.
+
+**산출물이 나뉘는 곳**
 
 ```
-pipeline/src/content.ts:13   level: 'pro' | 'amateur'
-pipeline/src/cli.ts:79       { value: 'amateur', label: '아마추어' }
+cache/{id}/            HLS 조각 · thumb-640/1280.webp   → R2 업로드
+site/public/media/     {id}-preview.mp4 · {id}-poster.jpg → 사이트에 포함
 ```
 
-고칠 것.
-
-- `level` 에 `semipro` 추가. 선택지와 타입 양쪽
-- `video` 에 `preview`(호버용 짧은 클립), `poster`(목록 썸네일) 필드 추가
-- 인코딩할 때 2.5초 무음 클립과 포스터를 같이 뽑아 `site/public/media/` 에 넣기
-- 사진 일괄 등록. `site/src/content/photos/index.json` 에 붙이는 방식
-
-클립과 포스터를 만드는 ffmpeg 명령은 이미 검증했다.
-
-```bash
-# 2.5초 무음 미리보기
-ffmpeg -ss <시작> -t 2.5 -i <원본> -vf "scale=640:-2,fps=24" -an \
-  -c:v libx264 -crf 30 -preset veryfast -movflags +faststart -pix_fmt yuv420p out.mp4
-
-# 포스터
-ffmpeg -ss <시작> -i <원본> -vframes 1 -vf "scale=640:-2" -q:v 5 out.jpg
-```
+미리보기는 640×360, 2.5초, **무음**이다. 무음이어야 브라우저가 자동 재생을
+허용한다. 실제로 뽑아 규격을 확인했다.
 
 ### 3.2 실제 영상 업로드
 
