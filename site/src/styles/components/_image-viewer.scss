@@ -210,17 +210,32 @@
 // 빈틈이 생기지 않고, 자바스크립트 없이 동작한다.
 .masonry {
   margin-top: s(6);
-  column-count: 2;
-  column-gap: s(3);
 
-  @include up(md) { column-count: 3; }
+  // 휴대폰에서는 한 열로 화면을 꽉 채운다.
+  // 두 열로 나누면 폭이 170px 도 안 돼 사진이 뭉개진다.
+  column-count: 1;
+  column-gap: 0;
+  margin-inline: calc(var(--gutter) * -1);
+
+  @include up(sm) {
+    column-count: 2;
+    column-gap: s(2);
+    margin-inline: 0;
+  }
+  @include up(lg) { column-count: 3; column-gap: s(3); }
   @include up(xl) { column-count: 4; }
 
   &__item {
     position: relative;
     break-inside: avoid;
-    margin-bottom: s(3);
-    border-radius: r(md);
+    margin-bottom: 2px;
+    border-radius: 0;
+
+    @include up(sm) {
+      margin-bottom: s(2);
+      border-radius: r(md);
+    }
+    @include up(lg) { margin-bottom: s(3); }
     overflow: hidden;
     cursor: pointer;
     filter: brightness(.86);
@@ -252,11 +267,18 @@
 
   &__meta {
     position: absolute;
-    left: s(3);
-    right: s(3);
-    bottom: s(3);
+    left: s(4);
+    right: s(4);
+    bottom: s(4);
     @include kr;
-    font-size: fs(xsmall);
+    font-size: fs(body);
+
+    @include up(sm) {
+      left: s(3);
+      right: s(3);
+      bottom: s(3);
+      font-size: fs(xsmall);
+    }
     font-weight: fw(bold);
     opacity: 0;
     transform: translateY(8px);
