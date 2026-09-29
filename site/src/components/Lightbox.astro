@@ -1,0 +1,13 @@
+---
+// 사진 클릭 시 열리는 전체 화면. 좌우 키와 ESC 로 조작한다.
+---
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="사진 보기">
+  <button class="lightbox__close" data-lightbox-close aria-label="닫기">✕</button>
+  <button class="lightbox__nav lightbox__nav--prev" data-lightbox-prev aria-label="이전 사진">←</button>
+  <div class="lightbox__stage"></div>
+  <button class="lightbox__nav lightbox__nav--next" data-lightbox-next aria-label="다음 사진">→</button>
+  <div class="lightbox__caption">
+    <span data-lightbox-caption></span>
+    <span class="lightbox__count" data-lightbox-count></span>
+  </div>
+</div>

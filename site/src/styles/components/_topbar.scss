@@ -1,0 +1,120 @@
+// ─────────────────────────────────────────────
+//  컴포넌트: 상단 고정 바 + BGM 토글
+//  히어로를 지나면 내려온다. 히어로가 없는 페이지는 항상 보인다.
+// ─────────────────────────────────────────────
+
+@use '../mixins' as *;
+
+.topbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: z(sticky);
+  background: rgba(10, 10, 10, .78);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid c(line);
+  transform: translateY(-100%);
+  transition: transform d(base) e(inout);
+
+  &.is-on,
+  &--pinned { transform: translateY(0); }
+
+  &__inner {
+    @include container;
+    display: flex;
+    align-items: center;
+    gap: s(3);
+    padding-block: 13px;
+    @include kr;
+  }
+
+  &__name {
+    font-size: 14px;
+    font-weight: fw(heavy);
+    letter-spacing: tr(snug);
+  }
+
+  &__record {
+    font-family: var(--font-sans);
+    font-size: fs(xsmall);
+    font-weight: fw(black);
+    color: c(accent);
+  }
+
+  &__spacer { margin-left: auto; }
+}
+
+.topnav {
+  display: none;
+  gap: s(5);
+  margin-left: s(6);
+  font-size: fs(xsmall);
+  letter-spacing: tr(wide);
+  font-weight: fw(bold);
+  font-family: var(--font-sans);
+
+  @include up(md) { display: flex; }
+
+  a {
+    color: c(muted);
+    transition: color d(fast);
+
+    &:hover,
+    &.is-here { color: c(accent); }
+  }
+}
+
+// ── BGM 토글 ────────────────────────────────
+// 자동 재생하지 않는다. 브라우저가 막고, 링크를 받은 사람이
+// 지하철이나 사무실에서 열기 때문이다.
+.bgm-toggle {
+  display: flex;
+  align-items: center;
+  gap: s(2);
+  border: 1px solid c(line-2);
+  border-radius: r(pill);
+  padding: 5px 12px;
+  font-family: var(--font-sans);
+  font-size: fs(label);
+  font-weight: fw(bold);
+  letter-spacing: .08em;
+  color: c(muted);
+  background: none;
+  cursor: pointer;
+  transition: border-color d(fast), color d(fast);
+
+  &:hover,
+  &.is-playing {
+    border-color: c(accent);
+    color: c(accent);
+  }
+
+  &__eq {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5px;
+    height: 10px;
+
+    i {
+      display: block;
+      width: 2px;
+      height: 3px;
+      background: currentColor;
+    }
+  }
+
+  &.is-playing &__eq i {
+    animation: bgm-eq .7s ease-in-out infinite alternate;
+
+    &:nth-child(2) { animation-delay: .18s; }
+    &:nth-child(3) { animation-delay: .36s; }
+  }
+}
+
+@keyframes bgm-eq {
+  from { height: 3px; }
+  to   { height: 10px; }
+}
+
+@include reduced-motion {
+  .bgm-toggle.is-playing .bgm-toggle__eq i { animation: none; }
+}

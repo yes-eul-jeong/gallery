@@ -1,0 +1,31 @@
+---
+import { ui } from '../i18n/ko'
+import { finishRate, decisionRate, winRate, bouts } from '../lib/record'
+import type { Record } from '../lib/record'
+
+interface Props { pro: Record; all: Record }
+const { pro, all } = Astro.props
+
+// 승리가 없으면 비율이 뜻을 갖지 않는다
+const rows = all.win === 0 ? [] : [
+  { label: '피니시 승률', value: finishRate(all) },
+  { label: '판정 승률', value: decisionRate(all) },
+  ...(bouts(pro) > 0 ? [{ label: '프로 승률', value: winRate(pro) }] : []),
+]
+---
+
+{rows.length > 0 && (
+  <section class="section">
+    <div class="section__inner">
+      <div class="label">{ui.breakdown}</div>
+      <div class="breakdown">
+        {rows.map((r) => (
+          <div>
+            <div class="breakdown__row"><span>{r.label}</span><span>{r.value}%</span></div>
+            <div class="breakdown__bar"><i data-fill={r.value}></i></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}

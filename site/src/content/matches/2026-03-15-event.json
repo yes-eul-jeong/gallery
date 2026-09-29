@@ -1,0 +1,15 @@
+{
+  "date": "2026-03-15",
+  "level": "pro",
+  "event": "대회명",
+  "rule": "k1",
+  "weightClass": "-52kg",
+  "opponent": { "name": "상대 선수" },
+  "rounds": "3R 2분",
+  "result": "win",
+  "method": "ko",
+  "endTime": "2R 1:34",
+  "title": "2R KO 승",
+  "video": { "key": "test-video", "duration": 588, "resolution": "1080p", "preview": "clip2.mp4", "poster": "poster2.jpg" },
+  "photos": []
+}

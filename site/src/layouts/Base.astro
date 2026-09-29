@@ -1,0 +1,45 @@
+---
+/**
+ * 모든 페이지의 껍데기.
+ * 지금은 비공개 배포라 검색 수집을 막는다. 공개할 때 noindex 를 지운다.
+ */
+import '../styles/main.scss'
+import TopBar from '../components/TopBar.astro'
+import { getEntry } from 'astro:content'
+
+interface Props {
+  title: string
+  description?: string
+  here?: 'home' | 'videos' | 'photos'
+}
+
+const { title, description, here } = Astro.props
+const profile = await getEntry('profile', 'main')
+if (!profile) throw new Error('profile.json 에 main 항목이 없습니다')
+---
+
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link
+      rel="stylesheet"
+      href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css"
+    />
+  </head>
+  <body>
+    <TopBar profile={profile.data} here={here} />
+    <slot />
+    <script>
+      import '../scripts/app.js'
+    </script>
+  </body>
+</html>

@@ -1,0 +1,461 @@
+// ─────────────────────────────────────────────
+//  컴포넌트: 영상
+//    video-card    호버하면 2.5초 미리보기가 돈다. 누르면 상세로 간다.
+//    video-slider  가로 트랙 + 진행 막대
+//    video-row     목록 페이지 행 (여기도 미리보기가 돈다)
+//    video-viewer  상세 페이지 재생기
+//
+//  미리보기는 소리가 없다. 링크를 받은 사람이 조용한 곳에서 연다.
+//  preload="none" 이라 호버하기 전에는 내려받지 않는다.
+// ─────────────────────────────────────────────
+
+@use '../mixins' as *;
+
+// ── 슬라이드 카드 ───────────────────────────
+// 평소에는 영상이 위쪽만 차지하고 글자는 그 아래 맨바닥에 놓인다.
+// 호버하면 칸이 넓어지고 영상이 아래까지 자라며 글자를 삼킨다.
+// 글자는 위로 밀려 올라가 영상 위에 얹힌다.
+.video-card {
+  --media-h: 47vw;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  flex: 0 0 84%;
+  scroll-snap-align: start;
+  padding-top: var(--media-h);
+  border-radius: r(lg);
+  overflow: hidden;
+  transition: flex-grow d(base) e(out);
+
+  @include up(sm) { flex-basis: 48%; --media-h: 27vw; }
+  @include up(xl) {
+    flex: 1 1 0;
+    --media-h: clamp(190px, 19vw, 250px);
+  }
+
+  // 아래로 깔리는 검정. 글자가 영상 위로 올라왔을 때 읽히게 한다.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, .62));
+    opacity: 0;
+    transition: opacity d(fast) ease-out;
+    pointer-events: none;
+  }
+
+  // 액센트를 얇게 섞는다. soft-light 라 색이 덮이지 않고 스며든다.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(35deg, transparent, c(accent));
+    opacity: 0;
+    mix-blend-mode: soft-light;
+    transition: opacity d(fast) ease-out;
+    pointer-events: none;
+  }
+
+  // ── 미디어 ──
+  &__poster,
+  &__preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    display: block;
+    width: 100%;
+    height: var(--media-h);
+    object-fit: cover;
+    object-position: center;
+    border-radius: r(lg);
+    transition: height d(fast) ease-out, opacity d(base);
+  }
+
+  &__poster { filter: brightness(.86) saturate(.92); }
+
+  &__preview { opacity: 0; }
+
+  &.is-previewing {
+    .video-card__poster { opacity: 0; }
+    .video-card__preview { opacity: 1; }
+  }
+
+  // 자리표시자도 같은 규칙을 따른다
+  &__media {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    width: 100%;
+    height: var(--media-h);
+    border-radius: r(lg);
+    overflow: hidden;
+    transition: height d(fast) ease-out;
+
+    .ph { width: 100%; height: 100%; }
+  }
+
+  // ── 글자 ──
+  &__kind,
+  &__title,
+  &__text {
+    position: relative;
+    z-index: 2;
+    max-width: 30rem;
+    transition: transform d(fast) ease-out, color d(fast) ease-out;
+  }
+
+  &__kind {
+    margin-top: s(5);
+    font-family: var(--font-sans);
+    font-size: fs(micro);
+    letter-spacing: tr(wider);
+    font-weight: fw(heavy);
+    color: c(accent);
+  }
+
+  &__title {
+    @include kr;
+    margin: s(2) 0 s(1);
+    font-size: fs(lead);
+    font-weight: fw(bold);
+    line-height: 1.38;
+    letter-spacing: tr(snug);
+  }
+
+  &__text {
+    @include kr;
+    font-size: fs(xsmall);
+    color: c(muted);
+    margin-bottom: 0;
+  }
+
+  // ── 우하단 표시 ──
+  // 큰 원형 버튼 대신 작은 화살표 하나만 둔다
+  &__icon {
+    position: absolute;
+    right: s(5);
+    bottom: s(5);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+    color: c(fg);
+    transform: scale(0);
+    transition: transform d(fast) ease-out;
+  }
+
+  // ── 미리보기 진행 ──
+  &__progress {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 3;
+    height: 2px;
+    background: var(--c-white-10);
+    opacity: 0;
+    transition: opacity d(fast);
+
+    i {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: c(accent);
+    }
+  }
+
+  &.is-previewing &__progress { opacity: 1; }
+
+  // ── 호버 ──
+  // 터치 기기에는 호버가 없다. 포인터가 있을 때만 건다.
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      flex-grow: 2;
+
+      &::before,
+      &::after { opacity: 1; }
+
+      .video-card__poster,
+      .video-card__preview,
+      .video-card__media { height: 100%; }
+
+      .video-card__icon {
+        transform: scale(1);
+        transition-delay: .2s;
+      }
+
+      .video-card__kind,
+      .video-card__title,
+      .video-card__text {
+        transform: translate(s(5), calc(-1 * #{s(5)}));
+        color: c(fg);
+      }
+
+      .video-card__kind { color: c(accent); }
+    }
+  }
+}
+
+// ── 슬라이더 ────────────────────────────────
+// 좁은 화면: 가로로 넘기는 트랙
+// 넓은 화면: 칸을 나눠 놓고 호버한 칸이 넓어진다. 넘길 필요가 없다.
+.video-slider {
+  display: flex;
+  gap: s(4);
+  margin-top: s(6);
+  padding: s(2) 0 s(4);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  cursor: grab;
+
+  &::-webkit-scrollbar { height: 0; }
+
+  &.is-dragging {
+    cursor: grabbing;
+    scroll-snap-type: none;
+
+    .video-card { pointer-events: none; }
+  }
+
+  @include up(xl) {
+    overflow: visible;
+    cursor: default;
+    scroll-snap-type: none;
+    gap: s(3);
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    gap: s(4);
+    margin-top: s(2);
+
+    // 넓은 화면에서는 넘길 일이 없으니 조작부를 감춘다
+    @include up(xl) { display: none; }
+  }
+
+  &__track {
+    flex: 1;
+    height: 2px;
+    background: c(line);
+    border-radius: 1px;
+    overflow: hidden;
+
+    i {
+      display: block;
+      height: 100%;
+      width: 20%;
+      background: c(accent);
+      transform-origin: left;
+      transition: transform .12s linear;
+    }
+  }
+
+  &__nav {
+    display: flex;
+    gap: s(2);
+    flex-shrink: 0;
+  }
+}
+
+// ── 목록 행 ─────────────────────────────────
+.video-row {
+  @include accent-rule;
+  @include kr;
+  display: flex;
+  align-items: center;
+  gap: s(4);
+  padding-block: s(4);
+  border-bottom: 1px solid c(line);
+
+  &__media {
+    position: relative;
+    flex-shrink: 0;
+    width: 124px;
+    aspect-ratio: 16 / 9;
+    border-radius: r(sm);
+    overflow: hidden;
+    background: #000;
+
+    @include up(md) { width: 190px; }
+  }
+
+  &__poster,
+  &__preview {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__poster {
+    filter: brightness(.8);
+    transition: opacity d(base), transform d(slower) e(out), filter d(base);
+  }
+
+  &__preview {
+    opacity: 0;
+    transition: opacity d(base);
+  }
+
+  &:hover &__poster { transform: scale(1.08); opacity: 0; }
+  &.is-previewing &__preview { opacity: 1; }
+
+  &__media .ph { width: 100%; height: 100%; transition: transform d(slower) e(out); }
+  &:hover &__media .ph { transform: scale(1.08); }
+
+  &__pin {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-accent-glow);
+    font-size: fs(xsmall);
+    color: c(fg);
+    opacity: 0;
+    transition: opacity d(fast);
+  }
+
+  &:hover &__pin { opacity: 1; }
+  &.is-previewing &__pin { opacity: 0; }
+
+  &__body { flex: 1; min-width: 0; }
+
+  &__kind {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: fs(micro);
+    letter-spacing: tr(wider);
+    font-weight: fw(heavy);
+    color: c(accent);
+  }
+
+  &__title {
+    display: block;
+    font-size: fs(body);
+    font-weight: fw(bold);
+    margin-top: s(1);
+  }
+
+  &__sub {
+    display: block;
+    font-size: fs(xsmall);
+    color: c(muted);
+    margin-top: s(1);
+  }
+
+  &__right {
+    margin-left: auto;
+    flex-shrink: 0;
+    text-align: right;
+    font-family: var(--font-sans);
+
+    .dt { display: block; font-size: fs(xsmall); color: c(dim); }
+    .dur { display: block; font-size: fs(xsmall); color: c(muted); margin-top: s(1); }
+  }
+}
+
+.video-list { margin-top: s(5); }
+
+// ── 상세 재생기 ─────────────────────────────
+.video-viewer {
+  position: relative;
+  margin-top: s(6);
+  aspect-ratio: 16 / 9;
+  border-radius: r(lg);
+  overflow: hidden;
+  background: #000;
+
+  video, img { width: 100%; height: 100%; object-fit: cover; }
+
+  &__play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: c(accent);
+      color: c(on-accent);
+      font-size: 20px;
+      font-style: normal;
+      cursor: pointer;
+      transition: transform d(fast) e(out);
+
+      &:hover { transform: scale(1.12); }
+    }
+  }
+}
+
+// ── 상세 정보 ───────────────────────────────
+.detail {
+  @include up(lg) {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: s(8);
+    align-items: start;
+  }
+
+  &__meta { margin-top: s(6); @include kr; }
+}
+
+.spec-list {
+  margin: 0;
+
+  &__row {
+    display: flex;
+    gap: s(4);
+    padding-block: s(4);
+    border-bottom: 1px solid c(line);
+  }
+
+  dt {
+    flex-shrink: 0;
+    width: 92px;
+    padding-top: 3px;
+    font-family: var(--font-sans);
+    font-size: fs(label);
+    letter-spacing: tr(wider);
+    font-weight: fw(heavy);
+    color: c(dim);
+  }
+
+  dd {
+    margin: 0;
+    font-size: fs(body);
+    font-weight: fw(medium);
+
+    em { font-style: normal; color: c(accent); }
+  }
+}
+
+// 터치 기기에는 호버가 없다. 미리보기 관련 연출을 끈다.
+@media (hover: none) {
+  .video-card__preview,
+  .video-row__preview,
+  .video-card__flag,
+  .video-card__progress { display: none; }
+
+  .video-card__poster,
+  .video-row__poster { opacity: 1 !important; transform: none !important; }
+}
+
+@include reduced-motion {
+  .video-card, .video-card__poster, .video-card__preview,
+  .video-row__poster, .video-row__preview { transition: none; }
+}

@@ -1,0 +1,78 @@
+// ─────────────────────────────────────────────
+//  컴포넌트: 흐르는 띠
+//  섹션 사이를 끊어주고 화면에 움직임을 남긴다.
+//  읽히는 정보가 아니라 장식이므로 aria-hidden 으로 감춘다.
+// ─────────────────────────────────────────────
+
+@use '../mixins' as *;
+
+.marquee {
+  overflow: hidden;
+  padding-block: s(4);
+  border-block: 1px solid c(line);
+  background: c(bg);
+  user-select: none;
+
+  &__track {
+    display: flex;
+    width: max-content;
+    animation: marquee-slide 28s linear infinite;
+  }
+
+  &:hover &__track { animation-play-state: paused; }
+
+  &__group {
+    display: flex;
+    align-items: center;
+    gap: s(6);
+    padding-right: s(6);
+  }
+
+  &__item {
+    font-family: var(--font-sans);
+    font-size: clamp(22px, 3.4vw, 40px);
+    font-weight: fw(black);
+    letter-spacing: tr(snug);
+    color: transparent;
+    -webkit-text-stroke: 1px var(--c-white-20);
+    white-space: nowrap;
+
+    // 액센트가 걸린 항목만 채운다
+    &--fill {
+      color: c(accent);
+      -webkit-text-stroke: 0;
+    }
+  }
+
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: c(accent);
+    flex-shrink: 0;
+  }
+
+  // 액센트 바탕 변형
+  &--solid {
+    background: c(accent);
+    border-color: c(accent);
+
+    .marquee__item {
+      color: c(on-accent);
+      -webkit-text-stroke: 0;
+      font-size: clamp(14px, 1.6vw, 20px);
+      letter-spacing: tr(wide);
+    }
+
+    .marquee__dot { background: c(on-accent); }
+  }
+}
+
+@keyframes marquee-slide {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@include reduced-motion {
+  .marquee__track { animation: none; }
+}

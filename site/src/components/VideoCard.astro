@@ -1,0 +1,27 @@
+---
+import { asset, url } from '../lib/media'
+
+interface Props {
+  href: string
+  kind: string
+  title: string
+  text: string
+  poster?: string
+  preview?: string
+}
+const { href, kind, title, text, poster, preview } = Astro.props
+---
+
+<a class="video-card" href={url(href)} data-preview={preview ? '' : undefined}>
+  {poster
+    ? <img class="video-card__poster" src={asset(poster)} alt="" loading="lazy" />
+    : <div class="video-card__media"><div class="ph ph--fill"><div class="ph__icon">▶</div></div></div>}
+  {preview && (
+    <video class="video-card__preview" src={asset(preview)} muted loop playsinline preload="none"></video>
+  )}
+  <span class="video-card__icon">↗</span>
+  <div class="video-card__kind">{kind}</div>
+  <h3 class="video-card__title">{title}</h3>
+  <p class="video-card__text">{text}</p>
+  <div class="video-card__progress"><i data-preview-progress></i></div>
+</a>

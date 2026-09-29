@@ -1,0 +1,14 @@
+{
+  "date": "2026-02-14",
+  "type": "bag",
+  "title": "샌드백 · 파워 세션",
+  "place": "라온킥복싱",
+  "video": {
+    "key": "test-video",
+    "duration": 460,
+    "resolution": "720p",
+    "preview": "clip4.mp4",
+    "poster": "poster4.jpg"
+  },
+  "photos": []
+}

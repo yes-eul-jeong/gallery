@@ -1,0 +1,85 @@
+// ─────────────────────────────────────────────
+//  토큰을 꺼내 쓰는 함수와 반복 패턴
+// ─────────────────────────────────────────────
+
+@use 'sass:map';
+@use 'tokens' as *;
+
+// ── 토큰 접근 ───────────────────────────────
+@function c($k)       { @return var(--c-#{$k}); }
+@function s($k)       { @return map.get($space, $k); }
+@function r($k)       { @return map.get($radius, $k); }
+@function d($k)       { @return map.get($duration, $k); }
+@function e($k)       { @return map.get($ease, $k); }
+@function fs($k)      { @return map.get($size, $k); }
+@function fw($k)      { @return map.get($weight, $k); }
+@function tr($k)      { @return map.get($tracking, $k); }
+@function z($k)       { @return map.get($z, $k); }
+
+// ── 반응형 ──────────────────────────────────
+@mixin up($name) {
+  @media (min-width: map.get($bp, $name)) { @content; }
+}
+@mixin down($name) {
+  @media (max-width: map.get($bp, $name) - 1px) { @content; }
+}
+
+// ── 레이아웃 ────────────────────────────────
+@mixin container {
+  max-width: var(--max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+// ── 타이포 ──────────────────────────────────
+@mixin label {
+  font-size: fs(label);
+  letter-spacing: tr(widest);
+  font-weight: fw(heavy);
+  color: c(dim);
+  font-family: var(--font-sans);
+}
+
+@mixin kr {
+  font-family: var(--font-kr);
+}
+
+// ── 모션 ────────────────────────────────────
+// 왼쪽에서 그어지는 초록 선. 목록 행과 연락처가 공유한다.
+@mixin accent-rule($offset: -14px) {
+  position: relative;
+  transition: padding-left d(fast) e(out);
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: $offset;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: c(accent);
+    transform: scaleY(0);
+    transition: transform d(fast) e(out);
+  }
+
+  &:hover {
+    padding-left: 10px;
+    &::before { transform: scaleY(1); }
+  }
+}
+
+// 접근성: 화면에서만 숨긴다
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// 모션을 줄여달라는 설정을 존중한다
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) { @content; }
+}

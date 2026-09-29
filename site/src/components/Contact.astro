@@ -1,0 +1,44 @@
+---
+import type { CollectionEntry } from 'astro:content'
+import { ui } from '../i18n/ko'
+
+interface Props { profile: CollectionEntry<'profile'>['data'] }
+const { profile: p } = Astro.props
+---
+
+<section class="contact" id="contact">
+  <div class="contact__inner">
+    <div class="label">{ui.contact}</div>
+    <div class="contact__list">
+      <a
+        class="contact-item contact-item--link"
+        href={`https://instagram.com/${p.instagram}`}
+        target="_blank"
+        rel="noopener"
+      >
+        <span class="contact-item__key">INSTAGRAM</span>
+        <span class="contact-item__value">@{p.instagram}</span>
+        <span class="contact-item__go">↗</span>
+      </a>
+
+      {p.email ? (
+        <a class="contact-item contact-item--link" href={`mailto:${p.email}`}>
+          <span class="contact-item__key">EMAIL</span>
+          <span class="contact-item__value">{p.email}</span>
+          <span class="contact-item__go">↗</span>
+        </a>
+      ) : (
+        <div class="contact-item">
+          <span class="contact-item__key">EMAIL</span>
+          <span class="contact-item__value">이메일 주소 미정</span>
+        </div>
+      )}
+
+      <div class="contact-item">
+        <span class="contact-item__key">GYM</span>
+        <span class="contact-item__value">{p.gym}</span>
+      </div>
+    </div>
+    <div class="site-foot">{p.nameEn} · FIGHT RESUME · {new Date().getFullYear()}</div>
+  </div>
+</section>

@@ -1,0 +1,68 @@
+---
+import { getCollection } from 'astro:content'
+import Base from '../../layouts/Base.astro'
+import VideoPlayer from '../../components/VideoPlayer.vue'
+import { asset, url, mediaBase } from '../../lib/media'
+import { trainingLabel, formatDate, formatDuration } from '../../i18n/ko'
+
+export async function getStaticPaths() {
+  const items = await getCollection('training')
+  return items.map((t) => ({ params: { slug: t.id }, props: { item: t } }))
+}
+
+const { item } = Astro.props
+const d = item.data
+---
+
+<Base title={`${d.title} · 황승하`} here="videos">
+  <main>
+    <div class="page-head">
+      <div class="container">
+        <a class="link-back" href={url('/videos')}><span>←</span> 영상 목록</a>
+        <h1 class="page-head__title">{d.title}</h1>
+        <div class="page-head__count">
+          {[trainingLabel[d.type], formatDate(d.date), d.place,
+            d.video && formatDuration(d.video.duration)].filter(Boolean).join(' · ')}
+        </div>
+      </div>
+    </div>
+
+    <section class="section" style="border-top:0; padding-top:24px">
+      <div class="section__inner">
+        <div class="detail">
+          <div>
+            {d.video && mediaBase ? (
+              <div class="video-viewer">
+                <VideoPlayer
+                  client:visible
+                  mediaBase={mediaBase}
+                  videoId={d.video.key}
+                  poster={d.video.poster ? asset(d.video.poster) : undefined}
+                />
+              </div>
+            ) : (
+              <div class="video-viewer">
+                <div class="ph ph--fill"><div class="ph__icon">▶</div><div class="ph__label">영상 없음</div></div>
+              </div>
+            )}
+          </div>
+
+          <div class="detail__meta">
+            <div class="label label--plain">훈련 정보</div>
+            <dl class="spec-list">
+              <div class="spec-list__row"><dt>유형</dt><dd><em>{trainingLabel[d.type]}</em></dd></div>
+              <div class="spec-list__row"><dt>날짜</dt><dd>{formatDate(d.date)}</dd></div>
+              {d.place && <div class="spec-list__row"><dt>장소</dt><dd>{d.place}</dd></div>}
+              {d.video && (
+                <div class="spec-list__row">
+                  <dt>영상</dt><dd>{formatDuration(d.video.duration)} · {d.video.resolution}</dd>
+                </div>
+              )}
+            </dl>
+            {d.description && <p class="page-head__count" style="margin-top:20px">{d.description}</p>}
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</Base>

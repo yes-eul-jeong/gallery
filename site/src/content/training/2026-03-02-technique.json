@@ -1,0 +1,14 @@
+{
+  "date": "2026-03-02",
+  "type": "technique",
+  "title": "로우킥 카운터",
+  "place": "라온킥복싱",
+  "video": {
+    "key": "test-video",
+    "duration": 235,
+    "resolution": "720p",
+    "preview": "clip3.mp4",
+    "poster": "poster3.jpg"
+  },
+  "photos": []
+}

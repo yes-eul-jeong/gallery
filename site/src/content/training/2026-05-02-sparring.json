@@ -1,0 +1,14 @@
+{
+  "date": "2026-05-02",
+  "type": "sparring",
+  "title": "스파링 · 3라운드",
+  "place": "라온킥복싱",
+  "video": {
+    "key": "test-video",
+    "duration": 372,
+    "resolution": "720p",
+    "preview": "clip5.mp4",
+    "poster": "poster5.jpg"
+  },
+  "photos": []
+}

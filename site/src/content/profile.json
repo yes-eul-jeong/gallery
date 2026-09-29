@@ -1,21 +1,16 @@
 {
   "main": {
-    "name": "선수명",
-    "nameEn": "PLAYER NAME",
-    "birthYear": 1998,
-    "gym": "소속 체육관",
-    "height": 173,
-    "weightClass": "-63kg",
-    "rankings": [
-      {
-        "org": "대한킥복싱협회",
-        "division": "-63kg",
-        "rank": 3,
-        "asOf": "2025-12"
-      }
-    ],
+    "name": "황승하",
+    "nameEn": "HWANG SEUNGHA",
+    "birthYear": 1995,
+    "gender": "female",
+    "gym": "라온킥복싱",
+    "height": 164,
+    "weightClass": "-52kg",
+    "rankings": [],
     "titles": [],
-    "availableFrom": "2026년 3월",
-    "instagram": "instagram_id"
+    "availableFrom": "2026.12.18",
+    "availableNote": "국내 · 해외 모두 가능",
+    "instagram": "hwangstriking"
   }
 }

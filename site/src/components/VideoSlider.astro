@@ -1,0 +1,16 @@
+---
+interface Props { id: string }
+const { id } = Astro.props
+---
+
+<div class="video-slider" data-slider={id}>
+  <slot />
+</div>
+
+<div class="video-slider__foot">
+  <div class="video-slider__track"><i data-slider-progress={id}></i></div>
+  <div class="video-slider__nav">
+    <button class="btn btn--icon" data-slider-prev={id} aria-label="이전 영상">←</button>
+    <button class="btn btn--icon" data-slider-next={id} aria-label="다음 영상">→</button>
+  </div>
+</div>

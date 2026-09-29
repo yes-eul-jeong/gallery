@@ -1,0 +1,41 @@
+---
+import type { CollectionEntry } from 'astro:content'
+import { asset } from '../lib/media'
+import { genderLabel, ui, formatDate } from '../i18n/ko'
+
+interface Props {
+  profile: CollectionEntry<'profile'>['data']
+  record: { win: number; loss: number }
+}
+const { profile: p, record } = Astro.props
+
+const status = p.nextBout
+  ? `${formatDate(p.nextBout.date)} 출전 예정`
+  : p.availableFrom
+    ? ui.availableFrom(p.availableFrom)
+    : null
+---
+
+<section class="hero rise is-in">
+  <div class="hero__bg">
+    <img src={asset('photo1.jpg')} alt={`${p.name} 경기 사진`} />
+  </div>
+  <div class="hero__veil"></div>
+
+  <div class="hero__inner">
+    <div>
+      {status && <span class="badge"><i class="badge__dot"></i>{status}</span>}
+      <h1 class="hero__name rise"><span>{p.name}</span></h1>
+      <div class="hero__name-en">{p.nameEn}</div>
+      <div class="hero__spec">
+        {p.gym} · <b>{genderLabel[p.gender]} {p.weightClass}</b> · {p.height}cm · {p.birthYear}
+      </div>
+    </div>
+    <div class="hero__side">
+      <div class="n">{record.win}–{record.loss}</div>
+      <div class="t">{ui.proRecord}</div>
+    </div>
+  </div>
+
+  <div class="hero__scroll">{ui.scroll}</div>
+</section>

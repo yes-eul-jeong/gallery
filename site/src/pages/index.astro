@@ -1,59 +1,125 @@
 ---
 import { getCollection, getEntry } from 'astro:content'
+import Base from '../layouts/Base.astro'
+import Hero from '../components/Hero.astro'
+import Record from '../components/Record.astro'
+import BoutStatus from '../components/BoutStatus.astro'
+import MatchRow from '../components/MatchRow.astro'
+import VideoSlider from '../components/VideoSlider.astro'
+import VideoCard from '../components/VideoCard.astro'
+import Breakdown from '../components/Breakdown.astro'
+import PhotoFan from '../components/PhotoFan.astro'
+import Contact from '../components/Contact.astro'
+import Lightbox from '../components/Lightbox.astro'
 import { tally, byDateDesc } from '../lib/record'
-import VideoPlayer from '../components/VideoPlayer.vue'
-
-const mediaBase = import.meta.env.PUBLIC_MEDIA_BASE ?? ''
+import { url } from '../lib/media'
+import { ui, levelLabel, methodLabel, resultLabel, trainingLabel, formatDate, formatDuration } from '../i18n/ko'
 
 const profile = await getEntry('profile', 'main')
-const matches = (await getCollection('matches')).sort(byDateDesc)
-const pro = tally(matches, 'pro')
-const amateur = tally(matches, 'amateur')
-
 if (!profile) throw new Error('profile.json 에 main 항목이 없습니다')
 const p = profile.data
-const ranking = p.rankings[0]
+
+const matches = (await getCollection('matches')).sort(byDateDesc)
+const training = (await getCollection('training')).sort(byDateDesc)
+
+const pro = tally(matches, 'pro')
+const semipro = tally(matches, 'semipro')
+const amateur = tally(matches, 'amateur')
+const all = {
+  win: pro.win + semipro.win + amateur.win,
+  loss: pro.loss + semipro.loss + amateur.loss,
+  draw: pro.draw + semipro.draw + amateur.draw,
+  ko: pro.ko + semipro.ko + amateur.ko,
+  noContest: pro.noContest + semipro.noContest + amateur.noContest,
+}
+
+// 첫 화면에는 최근 5경기만. 전부 늘어놓으면 최근 경기가 묻힌다.
+const recent = matches.slice(0, 5)
+
+// 영상 슬라이드: 경기 영상을 먼저, 훈련 영상을 뒤에
+const clips = [
+  ...matches
+    .filter((m) => m.data.video)
+    .map((m) => ({
+      href: `/match/${m.id}`,
+      kind: `${levelLabel[m.data.level]} · ${resultLabel[m.data.result]}`,
+      title: `${m.data.event} · ${m.data.title}`,
+      text: [formatDate(m.data.date), m.data.opponent.country, formatDuration(m.data.video!.duration)]
+        .filter(Boolean)
+        .join(' · '),
+      poster: m.data.video!.poster,
+      preview: m.data.video!.preview,
+    })),
+  ...training
+    .filter((t) => t.data.video)
+    .map((t) => ({
+      href: `/training/${t.id}`,
+      kind: trainingLabel[t.data.type],
+      title: t.data.title,
+      text: [formatDate(t.data.date), t.data.place, formatDuration(t.data.video!.duration)]
+        .filter(Boolean)
+        .join(' · '),
+      poster: t.data.video!.poster,
+      preview: t.data.video!.preview,
+    })),
+].slice(0, 6)
+
+// 부채: 경기마다 대표 사진 한 장
+type FanCard = { href: string; image: string; kind: string; title: string; sub: string }
+
+const fanImages = ['g1.jpg', 'g2.jpg', 'g3.jpg', 'g5.jpg', 'g8.jpg']
+const fanCards: FanCard[] = matches.slice(0, 4).map((m, i) => ({
+  href: `/match/${m.id}`,
+  image: fanImages[i] ?? 'g1.jpg',
+  kind: levelLabel[m.data.level],
+  title: m.data.event,
+  sub: `${formatDate(m.data.date)} · ${methodLabel[m.data.method]} ${resultLabel[m.data.result]}`,
+}))
+fanCards.push({
+  href: '/gallery',
+  image: 'g8.jpg',
+  kind: '훈련',
+  title: p.gym,
+  sub: '상시 · 전체 갤러리',
+})
 ---
 
-<html lang="ko">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{p.name} · 파이트 레주메</title>
-  </head>
-  <body>
-    <main>
-      <h1>황승하바보</h1>
-      <!-- <h1>{p.name}</h1> -->
-      <!-- <p>{p.gym} · {p.birthYear}년생</p>
+<Base title={`${p.name} · 파이트 레주메`} here="home">
+  <main>
+    <Hero profile={p} record={pro} />
+    <Record pro={pro} semipro={semipro} amateur={amateur} />
+    <BoutStatus profile={p} />
 
-      <p>
-        <strong>{pro.win} - {pro.loss}</strong>
-        {pro.ko > 0 && <span>KO {pro.ko}</span>}
-      </p>
-      {amateur.win + amateur.loss > 0 && <p>아마 {amateur.win} - {amateur.loss}</p>}
-      
-      <p>{p.weightClass} · {p.height}cm</p>
-      {ranking && <p>{ranking.org} {ranking.division} {ranking.rank}위 ({ranking.asOf} 기준)</p>}
-      {p.availableFrom && <p>{p.availableFrom} 이후 출전 가능</p>}
-      
-      <h2>경기 {matches.length}</h2>
-      {!mediaBase && <p>PUBLIC_MEDIA_BASE 가 설정되지 않아 영상을 재생할 수 없습니다</p>} -->
-      <!-- <ul>
-        {matches.map((m) => (
-          <li>
-            <p>
-              {m.data.date} · {m.data.event} · vs {m.data.opponent.name} ·
-              {m.data.result === 'win' ? ' 승' : m.data.result === 'loss' ? ' 패' : ' 무'}
-              {m.data.titleFight && ' · 타이틀전'}
-            </p>
-            {m.data.video && mediaBase && (
-              <VideoPlayer client:visible mediaBase={mediaBase} videoId={m.data.video.key} />
-            )}
-          </li>
-        ))}
-      </ul> -->
-      <VideoPlayer client:visible mediaBase={mediaBase} videoId={matches[0].data.video.key} />
-    </main>
-  </body>
-</html>
+    <section class="section">
+      <div class="section__inner">
+        <div class="section__head">
+          <div class="label" style="flex:1">{ui.eventResults}</div>
+          <a class="link-more" href={url('/videos?type=match')}>{ui.viewAll} <span>→</span></a>
+        </div>
+        <div class="match-list">
+          {recent.map((m) => <MatchRow match={m} />)}
+        </div>
+      </div>
+    </section>
+
+    {clips.length > 0 && (
+      <section class="section">
+        <div class="section__inner">
+          <div class="section__head">
+            <div class="label" style="flex:1">{ui.videos}</div>
+            <a class="link-more" href={url('/videos')}>{ui.viewList} <span>→</span></a>
+          </div>
+          <VideoSlider id="main">
+            {clips.map((c) => <VideoCard {...c} />)}
+          </VideoSlider>
+        </div>
+      </section>
+    )}
+
+    <Breakdown pro={pro} all={all} />
+    <PhotoFan cards={fanCards} />
+    <Contact profile={p} />
+  </main>
+
+  <Lightbox />
+</Base>

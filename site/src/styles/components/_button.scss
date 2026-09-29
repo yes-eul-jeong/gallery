@@ -1,0 +1,134 @@
+// ─────────────────────────────────────────────
+//  컴포넌트: 버튼
+//  solid / ghost / icon / chip / link
+//  초록 위 글자는 반드시 검정이다. 흰색은 1.4:1 로 안 읽힌다.
+// ─────────────────────────────────────────────
+
+@use '../mixins' as *;
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: s(2);
+  border: 1px solid transparent;
+  border-radius: r(md);
+  padding: 13px 22px;
+  font-family: var(--font-sans);
+  font-size: fs(xsmall);
+  font-weight: fw(black);
+  letter-spacing: tr(wide);
+  cursor: pointer;
+  background: none;
+  color: c(fg);
+  transition:
+    background d(fast),
+    border-color d(fast),
+    color d(fast),
+    transform d(fast) e(out);
+
+  &:active { transform: scale(.98); }
+
+  // 채운 버튼
+  &--solid {
+    background: c(accent);
+    color: c(on-accent);
+
+    &:hover { filter: brightness(1.08); }
+  }
+
+  // 테두리만
+  &--ghost {
+    border-color: c(line-2);
+    color: c(muted);
+
+    &:hover {
+      border-color: c(accent);
+      color: c(accent);
+    }
+  }
+
+  // 원형 아이콘
+  &--icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: r(pill);
+    border-color: c(line-2);
+    color: c(muted);
+
+    &:hover {
+      border-color: c(accent);
+      color: c(accent);
+    }
+  }
+
+  &--block { width: 100%; }
+  &--sm { padding: 9px 16px; font-size: fs(label); }
+}
+
+// ── 텍스트 링크 (VIEW LIST →) ───────────────
+.link-more {
+  display: inline-flex;
+  align-items: center;
+  gap: s(2);
+  font-family: var(--font-sans);
+  font-size: fs(xsmall);
+  font-weight: fw(heavy);
+  letter-spacing: tr(wide);
+  color: c(accent);
+  white-space: nowrap;
+  transition: gap d(fast) e(out);
+
+  &:hover { gap: s(3); }
+}
+
+// ── 뒤로 가기 ───────────────────────────────
+.link-back {
+  display: inline-flex;
+  align-items: center;
+  gap: s(2);
+  font-size: fs(xsmall);
+  font-weight: fw(heavy);
+  letter-spacing: tr(wide);
+  color: c(muted);
+  transition: color d(fast), gap d(fast) e(out);
+
+  &:hover {
+    color: c(accent);
+    gap: s(3);
+  }
+}
+
+// ── 필터 칩 ─────────────────────────────────
+.chip {
+  border: 1px solid c(line-2);
+  background: none;
+  color: c(muted);
+  border-radius: r(pill);
+  padding: 8px 16px;
+  font-size: fs(xsmall);
+  font-weight: fw(bold);
+  letter-spacing: .06em;
+  cursor: pointer;
+  @include kr;
+  transition: background d(fast), border-color d(fast), color d(fast);
+
+  &:hover {
+    border-color: #4A4A54;
+    color: c(fg);
+  }
+
+  &.is-on {
+    background: c(accent);
+    border-color: c(accent);
+    color: c(on-accent);
+  }
+}
+
+.chip-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: s(2);
+  margin-top: s(5);
+}

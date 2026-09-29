@@ -1,0 +1,34 @@
+---
+import { getCollection } from 'astro:content'
+import { tally } from '../lib/record'
+import { url } from '../lib/media'
+
+interface Props {
+  profile: { name: string; instagram: string }
+  here?: 'home' | 'videos' | 'photos'
+}
+const { profile, here } = Astro.props
+
+const matches = await getCollection('matches')
+const pro = tally(matches, 'pro')
+// 히어로가 없는 페이지에서는 처음부터 붙어 있다
+const pinned = here !== 'home'
+---
+
+<header class:list={['topbar', pinned && 'topbar--pinned']} id="topbar">
+  <div class="topbar__inner">
+    <a href={url('/')} class="topbar__name">{profile.name}</a>
+    <span class="topbar__record">{pro.win}–{pro.loss}</span>
+    <nav class="topnav">
+      <a href={url('/')} class:list={[here === 'home' && 'is-here']}>HOME</a>
+      <a href={url('/videos')} class:list={[here === 'videos' && 'is-here']}>VIDEOS</a>
+      <a href={url('/gallery')} class:list={[here === 'photos' && 'is-here']}>PHOTOS</a>
+      <a href={url('/#contact')}>CONTACT</a>
+    </nav>
+    <span class="topbar__spacer"></span>
+    <button class="bgm-toggle" id="bgmBtn" aria-pressed="false">
+      <span class="bgm-toggle__eq"><i></i><i></i><i></i></span>
+      <span data-bgm-label>BGM</span>
+    </button>
+  </div>
+</header>

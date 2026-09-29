@@ -1,0 +1,14 @@
+{
+  "date": "2026-06-24",
+  "level": "pro",
+  "event": "NJKF",
+  "rule": "k1",
+  "weightClass": "-52kg",
+  "opponent": { "name": "상대 선수", "country": "일본" },
+  "rounds": "3R 2분",
+  "result": "win",
+  "method": "unanimous",
+  "title": "NJKF 메인카드",
+  "video": { "key": "test-video", "duration": 872, "resolution": "1080p", "preview": "clip1.mp4", "poster": "poster1.jpg" },
+  "photos": []
+}

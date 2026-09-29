@@ -1,0 +1,29 @@
+---
+import type { CollectionEntry } from 'astro:content'
+import { url } from '../lib/media'
+import { resultMark, methodLabel, formatDate } from '../i18n/ko'
+
+interface Props { match: CollectionEntry<'matches'> }
+const { match } = Astro.props
+const d = match.data
+
+const loss = d.result === 'loss'
+---
+
+<a
+  class:list={['match-row', loss && 'match-row--loss', d.titleFight && 'match-row--title']}
+  href={url(`/match/${match.id}`)}
+>
+  <span class="match-row__result">{resultMark[d.result]}</span>
+  <span class="match-row__date">{formatDate(d.date)}</span>
+  <span class="match-row__body">
+    <span class="match-row__event">{d.event}</span>
+    <span class="match-row__opponent">
+      vs {d.opponent.name}{d.opponent.gym && ` (${d.opponent.gym})`}{d.opponent.country && ` · ${d.opponent.country}`}
+    </span>
+  </span>
+  <span class="match-row__method">
+    {methodLabel[d.method]}{d.endTime && <br />}{d.endTime ?? d.rounds.split(' ')[0]}
+  </span>
+  {d.video && <span class="match-row__play">▶</span>}
+</a>

@@ -1,0 +1,108 @@
+---
+import { getCollection } from 'astro:content'
+import Base from '../../layouts/Base.astro'
+import MatchRow from '../../components/MatchRow.astro'
+import VideoPlayer from '../../components/VideoPlayer.vue'
+import { asset, url, mediaBase } from '../../lib/media'
+import { byDateDesc } from '../../lib/record'
+import {
+  levelLabel, resultLabel, methodLabel, ruleLabel,
+  formatDate, formatDuration,
+} from '../../i18n/ko'
+
+export async function getStaticPaths() {
+  const matches = await getCollection('matches')
+  return matches.map((m) => ({ params: { slug: m.id }, props: { match: m } }))
+}
+
+const { match } = Astro.props
+const d = match.data
+
+const all = (await getCollection('matches')).sort(byDateDesc)
+const others = all.filter((m) => m.id !== match.id).slice(0, 2)
+
+const spec = [
+  ['결과', `${resultLabel[d.result]} · ${methodLabel[d.method]}${d.endTime ? ` ${d.endTime}` : ''}`, true],
+  ['대회', d.event],
+  ['날짜', formatDate(d.date)],
+  ['구분', levelLabel[d.level]],
+  ['룰', ruleLabel[d.rule]],
+  ['체급', d.weightClass],
+  ['라운드', d.rounds],
+  ['상대', d.opponent.name],
+  ['소속', d.opponent.gym],
+].filter(([, v]) => v) as [string, string, boolean?][]
+---
+
+<Base title={`${d.event} · ${formatDate(d.date)} · 황승하`}>
+  <main>
+    <div class="page-head">
+      <div class="container">
+        <a class="link-back" href={url('/')}><span>←</span> 전적으로</a>
+        <span class="badge" style="margin-top:18px">
+          {resultLabel[d.result]} · {methodLabel[d.method]}
+        </span>
+        <h1 class="page-head__title">{d.event}</h1>
+        <div class="page-head__count">
+          {[formatDate(d.date), d.opponent.country, d.weightClass, d.rounds].filter(Boolean).join(' · ')}
+        </div>
+      </div>
+    </div>
+
+    <section class="section" style="border-top:0; padding-top:24px">
+      <div class="section__inner">
+        <div class="detail">
+          <div>
+            {d.video && mediaBase ? (
+              <div class="video-viewer">
+                <VideoPlayer
+                  client:visible
+                  mediaBase={mediaBase}
+                  videoId={d.video.key}
+                  poster={d.video.poster ? asset(d.video.poster) : undefined}
+                />
+              </div>
+            ) : (
+              <div class="video-viewer">
+                <div class="ph ph--fill">
+                  <div class="ph__icon">▶</div>
+                  <div class="ph__label">영상 없음</div>
+                </div>
+              </div>
+            )}
+
+            {d.description && <p class="page-head__count" style="margin-top:16px">{d.description}</p>}
+          </div>
+
+          <div class="detail__meta">
+            <div class="label label--plain">경기 정보</div>
+            <dl class="spec-list">
+              {spec.map(([k, v, accent]) => (
+                <div class="spec-list__row">
+                  <dt>{k}</dt>
+                  <dd>{accent ? <em>{v}</em> : v}</dd>
+                </div>
+              ))}
+              {d.video && (
+                <div class="spec-list__row">
+                  <dt>영상</dt><dd>{formatDuration(d.video.duration)} · {d.video.resolution}</dd>
+                </div>
+              )}
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {others.length > 0 && (
+      <section class="section">
+        <div class="section__inner">
+          <div class="label">다른 경기</div>
+          <div class="match-list">
+            {others.map((m) => <MatchRow match={m} />)}
+          </div>
+        </div>
+      </section>
+    )}
+  </main>
+</Base>

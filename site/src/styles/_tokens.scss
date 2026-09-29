@@ -1,0 +1,180 @@
+@use 'sass:map';
+
+// ─────────────────────────────────────────────
+//  디자인 토큰
+//  값을 직접 쓰지 않는다. 전부 여기를 거친다.
+// ─────────────────────────────────────────────
+
+// ── 브레이크포인트 ──────────────────────────
+// SCSS 변수로만 둔다. 미디어 쿼리는 CSS 변수를 못 쓴다.
+$bp: (
+  sm: 640px,
+  md: 760px,
+  lg: 900px,
+  xl: 1000px,
+  xxl: 1240px,
+);
+
+// ── 색 ──────────────────────────────────────
+// 대비는 배경 #0A0A0A 기준으로 계산해 검증했다.
+//   흰색 19.8:1 / 보조 6.1:1 / 흐림 6.3:1 / 액센트 14.7:1
+$color: (
+  bg:          #0A0A0A,   // 페이지 배경
+  surface:     #101014,   // 카드
+  surface-2:   #16161C,   // 카드 위 한 단계
+  fg:          #FFFFFF,   // 본문
+  muted:       #8E8E96,   // 보조 텍스트   6.1:1
+  dim:         #5C5C63,   // 라벨          3.4:1 · 큰 글자에만
+  faint:       #3D3D45,   // 장식          비텍스트 전용
+  line:        #1B1B21,   // 구분선
+  line-2:      #2C2C33,   // 테두리
+  accent:      #00FF85,   // 액센트        14.7:1
+  on-accent:   #000000,   // 액센트 위 글자 14.7:1
+);
+
+// 투명도 단계.
+// 반투명이 필요할 때 값을 직접 쓰지 않도록 흑·백·액센트 모두 단계를 둔다.
+$alpha-steps: (100: 1, 80: .8, 50: .5, 20: .2, 10: .1, 5: .05);
+
+$accent-alpha: (
+  border: rgba(#00FF85, .32),
+  wash:   rgba(#00FF85, .07),
+  glow:   rgba(#00FF85, .16),
+);
+
+// 패배 행 흐림. .55 미만은 본문 대비 4.5:1 에 미달한다.
+$opacity-loss: .55;
+
+// ── 타이포 ──────────────────────────────────
+$font: (
+  sans: (Satoshi, Pretendard, -apple-system, BlinkMacSystemFont, sans-serif),
+  kr:   (Pretendard, -apple-system, BlinkMacSystemFont, sans-serif),
+);
+
+// 숫자와 영문은 sans, 한글은 kr 을 쓴다.
+$weight: (
+  regular: 400,
+  medium:  500,
+  bold:    700,
+  heavy:   800,
+  black:   900,
+);
+
+// 화면 폭에 따라 늘어나는 크기는 clamp 로 둔다
+$size: (
+  display:  clamp(52px, 13vw, 132px),   // 선수 이름
+  record:   clamp(76px, 18vw, 150px),   // 전적 숫자
+  title:    clamp(38px, 7vw, 68px),     // 페이지 제목
+  h3:       clamp(24px, 3vw, 34px),     // 보조 전적 숫자
+  lead:     clamp(15px, 1.6vw, 18px),
+  body:     15px,
+  small:    13px,
+  xsmall:   11.5px,
+  label:    10px,
+  micro:    9px,
+);
+
+$tracking: (
+  tight:  -.05em,   // 큰 숫자와 이름
+  snug:   -.03em,
+  normal: 0,
+  wide:   .12em,
+  wider:  .18em,
+  widest: .24em,    // 라벨
+  brand:  .36em,    // 영문 이름
+);
+
+// ── 간격 ────────────────────────────────────
+$space: (
+  0:  0,
+  1:  4px,
+  2:  8px,
+  3:  12px,
+  4:  16px,
+  5:  22px,
+  6:  28px,
+  7:  38px,
+  8:  54px,
+  9:  74px,
+);
+
+// ── 레이아웃 ────────────────────────────────
+$layout: (
+  max:        1240px,
+  gutter:     22px,
+  gutter-lg:  44px,
+);
+
+// ── 라운드 ──────────────────────────────────
+$radius: (
+  sm:   6px,
+  md:   10px,
+  lg:   14px,
+  xl:   20px,
+  pill: 99px,
+);
+
+// ── 모션 ────────────────────────────────────
+$duration: (
+  fast:   .2s,
+  base:   .32s,
+  slow:   .6s,
+  slower: 1.1s,
+);
+
+$ease: (
+  out:   cubic-bezier(.22, .8, .24, 1),
+  inout: cubic-bezier(.4, 0, .2, 1),
+);
+
+// ── 층위 ────────────────────────────────────
+$z: (
+  base:    1,
+  sticky:  50,
+  overlay: 90,
+  modal:   100,
+);
+
+// ─────────────────────────────────────────────
+//  CSS 변수로 내보낸다.
+//  런타임에 바꿔야 하는 값(테마, 강조색)은 여기서 읽는다.
+// ─────────────────────────────────────────────
+:root {
+  @each $k, $v in $color {
+    --c-#{$k}: #{$v};
+  }
+  @each $k, $v in $accent-alpha {
+    --c-accent-#{$k}: #{$v};
+  }
+
+  // 흑 · 백 · 액센트의 투명도 단계
+  @each $k, $a in $alpha-steps {
+    --c-black-#{$k}: #{rgba(#000000, $a)};
+    --c-white-#{$k}: #{rgba(#FFFFFF, $a)};
+    --c-accent-#{$k}: #{rgba(#00FF85, $a)};
+  }
+
+  --font-sans: #{map.get($font, sans)};
+  --font-kr: #{map.get($font, kr)};
+
+  @each $k, $v in $space {
+    --s-#{$k}: #{$v};
+  }
+  @each $k, $v in $radius {
+    --r-#{$k}: #{$v};
+  }
+  @each $k, $v in $duration {
+    --d-#{$k}: #{$v};
+  }
+  @each $k, $v in $ease {
+    --e-#{$k}: #{$v};
+  }
+
+  --max: #{map.get($layout, max)};
+  --gutter: #{map.get($layout, gutter)};
+  --opacity-loss: #{$opacity-loss};
+}
+
+@media (min-width: map.get($bp, lg)) {
+  :root { --gutter: #{map.get($layout, gutter-lg)}; }
+}

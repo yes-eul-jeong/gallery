@@ -1,0 +1,13 @@
+{
+  "date": "2025-02-09",
+  "level": "amateur",
+  "event": "아마추어 대회",
+  "rule": "k1",
+  "weightClass": "-63kg",
+  "opponent": { "name": "상대 선수" },
+  "rounds": "3R 2분",
+  "result": "loss",
+  "method": "unanimous",
+  "title": "3R 판정 패",
+  "photos": []
+}

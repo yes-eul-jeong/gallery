@@ -1,0 +1,14 @@
+{
+  "date": "2026-04-25",
+  "type": "sparring",
+  "title": "스파링 · 체급 위 상대",
+  "place": "라온킥복싱",
+  "video": {
+    "key": "test-video",
+    "duration": 510,
+    "resolution": "720p",
+    "preview": "clip1.mp4",
+    "poster": "poster1.jpg"
+  },
+  "photos": []
+}

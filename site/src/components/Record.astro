@@ -1,0 +1,36 @@
+---
+import { ui, levelLabel } from '../i18n/ko'
+import type { Record } from '../lib/record'
+import { bouts } from '../lib/record'
+
+interface Props {
+  pro: Record
+  semipro: Record
+  amateur: Record
+}
+const { pro, semipro, amateur } = Astro.props
+
+// 경기가 없는 등급은 아예 내보내지 않는다. 0-0 은 정보가 아니다.
+const minor = [
+  { key: 'semipro', r: semipro },
+  { key: 'amateur', r: amateur },
+].filter((x) => bouts(x.r) > 0)
+---
+
+<section class="section">
+  <div class="section__inner">
+    <div class="label">{ui.record}</div>
+    <div class="record">
+      <div class="record__main">
+        <div class="record__number">{pro.win}</div>
+        <div class="record__caption">– {pro.loss}<br />PRO</div>
+      </div>
+      <div class="record__minor">
+        {minor.map(({ key, r }) => (
+          <div><b>{r.win}–{r.loss}</b>{levelLabel[key as 'semipro' | 'amateur']}</div>
+        ))}
+        <div><b>{pro.ko + semipro.ko + amateur.ko}</b>KO / TKO</div>
+      </div>
+    </div>
+  </div>
+</section>

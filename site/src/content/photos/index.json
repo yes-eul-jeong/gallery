@@ -1,0 +1,100 @@
+[
+  {
+    "id": "p1",
+    "file": "g1.jpg",
+    "kind": "match",
+    "caption": "입장",
+    "context": "NJKF · 2026.06.24"
+  },
+  {
+    "id": "p2",
+    "file": "g4.jpg",
+    "kind": "match",
+    "caption": "1라운드",
+    "context": "NJKF · 2026.06.24"
+  },
+  {
+    "id": "p3",
+    "file": "g2.jpg",
+    "kind": "match",
+    "caption": "코너",
+    "context": "NJKF · 2026.06.24"
+  },
+  {
+    "id": "p4",
+    "file": "g3.jpg",
+    "kind": "match",
+    "caption": "타격",
+    "context": "NJKF · 2026.06.24"
+  },
+  {
+    "id": "p5",
+    "file": "photo1.jpg",
+    "kind": "match",
+    "caption": "링 워크",
+    "context": "NJKF · 2026.06.24"
+  },
+  {
+    "id": "p6",
+    "file": "g6.jpg",
+    "kind": "match",
+    "caption": "2라운드",
+    "context": "NJKF · 2026.06.24"
+  },
+  {
+    "id": "p7",
+    "file": "g5.jpg",
+    "kind": "weighin",
+    "caption": "계체",
+    "context": "NJKF · 2026.06.23"
+  },
+  {
+    "id": "p8",
+    "file": "g7.jpg",
+    "kind": "award",
+    "caption": "판정 직후",
+    "context": "NJKF · 2026.06.24"
+  },
+  {
+    "id": "p9",
+    "file": "photo2.jpg",
+    "kind": "match",
+    "caption": "코너 착석",
+    "context": "NJKF · 2026.06.24"
+  },
+  {
+    "id": "p10",
+    "file": "g8.jpg",
+    "kind": "training",
+    "caption": "미트 훈련",
+    "context": "라온킥복싱"
+  },
+  {
+    "id": "p11",
+    "file": "poster2.jpg",
+    "kind": "training",
+    "caption": "스파링",
+    "context": "라온킥복싱"
+  },
+  {
+    "id": "p12",
+    "file": "poster4.jpg",
+    "kind": "training",
+    "caption": "샌드백",
+    "context": "라온킥복싱"
+  },
+  {
+    "id": "p13",
+    "file": "poster3.jpg",
+    "kind": "match",
+    "caption": "타격",
+    "context": "대회명 · 2026.03.15"
+  },
+  {
+    "id": "p14",
+    "file": "poster5.jpg",
+    "kind": "award",
+    "caption": "시상",
+    "context": "대회명 · 2026.03.15"
+  }
+]

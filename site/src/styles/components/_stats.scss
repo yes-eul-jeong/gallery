@@ -1,0 +1,178 @@
+// ─────────────────────────────────────────────
+//  컴포넌트: 전적 · 다음 경기 · Breakdown
+//  전적은 등급을 합산하지 않는다. 프로만 크게 쓰고
+//  세미프로와 아마추어는 나란히 둔다.
+// ─────────────────────────────────────────────
+
+@use '../mixins' as *;
+
+// ── 전적 ────────────────────────────────────
+.record {
+  margin-top: s(6);
+
+  @include up(lg) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: s(8);
+    align-items: end;
+  }
+
+  &__main {
+    display: flex;
+    align-items: flex-end;
+    gap: s(4);
+  }
+
+  &__number {
+    font-size: fs(record);
+    font-weight: fw(black);
+    letter-spacing: tr(tight);
+    line-height: .78;
+    color: c(accent);
+  }
+
+  &__caption {
+    font-size: clamp(11px, 1.2vw, 14px);
+    letter-spacing: tr(wider);
+    font-weight: fw(heavy);
+    color: c(dim);
+    padding-bottom: s(3);
+  }
+
+  &__minor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: s(6);
+    margin-top: s(6);
+    @include kr;
+
+    @include up(lg) { margin-top: 0; }
+
+    div { font-size: fs(xsmall); color: c(muted); }
+
+    b {
+      display: block;
+      font-family: var(--font-sans);
+      font-size: fs(h3);
+      font-weight: fw(black);
+      color: c(fg);
+      letter-spacing: tr(snug);
+      margin-bottom: s(1);
+    }
+  }
+}
+
+// ── 경기 상태 ───────────────────────────────
+// 한 자리에 두 가지 상태가 들어간다.
+//   기본        확정된 다음 경기. 날짜를 크게 쓰고 빛이 훑는다
+//   --available 확정 경기가 없을 때. 언제부터 뛸 수 있는지만 알린다
+// 경기가 잡히면 기본 상태로 바뀌고, 끝나면 경기 기록으로 옮겨간다.
+.bout-status {
+  position: relative;
+  overflow: hidden;
+  margin-top: s(5);
+  padding: s(5);
+  border: 1px solid var(--c-accent-border);
+  border-radius: r(lg);
+  background: linear-gradient(135deg, var(--c-accent-wash), transparent 62%);
+  @include kr;
+
+  // 빛이 한 번 훑고 지나간다
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -40%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, var(--c-accent-wash), transparent);
+    animation: bout-sweep 4.5s ease-in-out infinite;
+  }
+
+  &__date {
+    font-family: var(--font-sans);
+    font-size: clamp(32px, 5vw, 46px);
+    font-weight: fw(black);
+    color: c(accent);
+    letter-spacing: tr(snug);
+  }
+
+  &__event {
+    font-size: fs(body);
+    font-weight: fw(medium);
+    margin-top: s(2);
+  }
+
+  &__meta {
+    font-size: fs(xsmall);
+    color: c(muted);
+    margin-top: s(1);
+  }
+
+  // 확정 경기가 없는 상태. 소리를 낮춘다.
+  // 예정 경기와 같은 무게로 보이면 매치메이커가 잘못 읽는다.
+  &--available {
+    border-color: c(line-2);
+    background: none;
+
+    &::after { display: none; }
+
+    .bout-status__date {
+      font-size: clamp(24px, 3.4vw, 34px);
+      color: c(fg);
+    }
+  }
+}
+
+@keyframes bout-sweep {
+  0%        { left: -40%; }
+  60%, 100% { left: 120%; }
+}
+
+// ── Breakdown ───────────────────────────────
+.breakdown {
+  margin-top: s(3);
+
+  @include up(lg) {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: s(7);
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: s(5);
+    font-size: fs(xsmall);
+    font-weight: fw(heavy);
+    letter-spacing: tr(wide);
+    color: c(muted);
+    @include kr;
+
+    span:last-child {
+      color: c(accent);
+      font-family: var(--font-sans);
+    }
+  }
+
+  &__bar {
+    height: 6px;
+    margin-top: s(2);
+    border-radius: 3px;
+    background: c(surface-2);
+    overflow: hidden;
+
+    i {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: c(accent);
+      transition: width d(slower) e(out);
+    }
+  }
+}
+
+@include reduced-motion {
+  .bout-status::after { animation: none; }
+  .breakdown__bar i { transition: none; }
+}

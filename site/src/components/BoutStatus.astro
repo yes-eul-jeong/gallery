@@ -1,0 +1,31 @@
+---
+import type { CollectionEntry } from 'astro:content'
+import { ui, formatDate } from '../i18n/ko'
+
+interface Props { profile: CollectionEntry<'profile'>['data'] }
+const { profile: p } = Astro.props
+
+const next = p.nextBout
+---
+
+<section class="section">
+  <div class="section__inner">
+    <div class="label">{next ? ui.nextBout : ui.availability}</div>
+
+    {next ? (
+      <div class="bout-status">
+        <div class="bout-status__date">{formatDate(next.date).slice(5)}</div>
+        <div class="bout-status__event">{next.event}</div>
+        <div class="bout-status__meta">
+          {[next.weightClass, next.rounds].filter(Boolean).join(' · ')}
+        </div>
+      </div>
+    ) : (
+      <div class="bout-status bout-status--available">
+        <div class="bout-status__date">{p.availableFrom} 부터</div>
+        <div class="bout-status__event">{ui.available}</div>
+        {p.availableNote && <div class="bout-status__meta">{p.availableNote}</div>}
+      </div>
+    )}
+  </div>
+</section>

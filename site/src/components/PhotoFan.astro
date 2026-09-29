@@ -1,0 +1,41 @@
+---
+import { asset, url } from '../lib/media'
+import { ui } from '../i18n/ko'
+
+interface Props {
+  cards: { href: string; image: string; kind: string; title: string; sub: string }[]
+}
+const { cards } = Astro.props
+---
+
+<section class="section">
+  <div class="section__inner">
+    <div class="section__head">
+      <div class="label" style="flex:1">{ui.photos}</div>
+      <a class="link-more" href={url('/gallery')}>{ui.viewGallery} <span>→</span></a>
+    </div>
+
+    <div class="fan">
+      <div class="fan__stage" data-fan tabindex="0" aria-label="경기별 사진">
+        {cards.map((c) => (
+          <a class="fan__card" href={url(c.href)}>
+            <img src={asset(c.image)} alt={c.title} loading="lazy" />
+            <span class="fan__label">
+              <span class="k">{c.kind}</span>
+              <span class="t">{c.title}</span>
+              <span class="s">{c.sub}</span>
+            </span>
+          </a>
+        ))}
+      </div>
+
+      <div class="fan__foot">
+        <div class="fan__count" data-fan-count></div>
+        <div class="fan__nav">
+          <button class="btn btn--icon" data-fan-prev aria-label="이전">←</button>
+          <button class="btn btn--icon" data-fan-next aria-label="다음">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

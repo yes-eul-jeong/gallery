@@ -1,0 +1,14 @@
+{
+  "date": "2026-04-18",
+  "type": "mitt",
+  "title": "미트 · 콤비네이션",
+  "place": "라온킥복싱",
+  "video": {
+    "key": "test-video",
+    "duration": 320,
+    "resolution": "720p",
+    "preview": "clip2.mp4",
+    "poster": "poster2.jpg"
+  },
+  "photos": []
+}

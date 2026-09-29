@@ -1,0 +1,106 @@
+// ─────────────────────────────────────────────
+//  컴포넌트: 경기 행
+//  승패를 색으로 가르지 않는다. 초록은 액센트로만 쓰고
+//  패배는 명암을 낮춘다. .55 미만은 대비가 4.5:1 에 미달한다.
+// ─────────────────────────────────────────────
+
+@use '../mixins' as *;
+
+.match-list { margin-top: s(3); }
+
+.match-row {
+  @include accent-rule;
+  @include kr;
+  display: flex;
+  align-items: center;
+  gap: s(3);
+  padding-block: s(4);
+  border-bottom: 1px solid c(line);
+  cursor: pointer;
+
+  &__result {
+    width: 20px;
+    flex-shrink: 0;
+    font-family: var(--font-sans);
+    font-size: 17px;
+    font-weight: fw(black);
+    color: c(accent);
+  }
+
+  &__date {
+    display: none;
+    width: 92px;
+    flex-shrink: 0;
+    font-family: var(--font-sans);
+    font-size: fs(xsmall);
+    color: c(dim);
+
+    @include up(md) { display: block; }
+  }
+
+  &__body { min-width: 0; }
+
+  &__event {
+    display: block;
+    font-size: fs(body);
+    font-weight: fw(bold);
+  }
+
+  &__opponent {
+    display: block;
+    font-size: fs(xsmall);
+    color: c(muted);
+    margin-top: s(1);
+  }
+
+  &__method {
+    margin-left: auto;
+    text-align: right;
+    white-space: nowrap;
+    font-size: fs(xsmall);
+    color: c(muted);
+  }
+
+  &__play {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    margin-left: s(3);
+    border: 1px solid c(line-2);
+    border-radius: 50%;
+    font-size: fs(micro);
+    color: c(muted);
+    transition: border-color d(fast), color d(fast), transform d(fast) e(out);
+  }
+
+  &:hover &__play {
+    border-color: c(accent);
+    color: c(accent);
+    transform: scale(1.1);
+  }
+
+  // 패배
+  &--loss {
+    opacity: var(--opacity-loss);
+
+    .match-row__result { color: c(fg); }
+  }
+
+  // 타이틀전
+  &--title .match-row__event::after {
+    content: '타이틀전';
+    display: inline-block;
+    margin-left: s(2);
+    padding: 2px 7px;
+    border: 1px solid var(--c-accent-border);
+    border-radius: r(sm);
+    font-size: fs(micro);
+    font-weight: fw(heavy);
+    letter-spacing: tr(wide);
+    color: c(accent);
+    vertical-align: middle;
+  }
+}

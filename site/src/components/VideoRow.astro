@@ -1,0 +1,37 @@
+---
+import { asset, url } from '../lib/media'
+
+interface Props {
+  href: string
+  kind: string
+  title: string
+  sub: string
+  date: string
+  duration: string
+  poster?: string
+  preview?: string
+  filter: string
+}
+const { href, kind, title, sub, date, duration, poster, preview, filter } = Astro.props
+---
+
+<a class="video-row" href={url(href)} data-kind={filter} data-preview={preview ? '' : undefined}>
+  <span class="video-row__media">
+    {poster
+      ? <img class="video-row__poster" src={asset(poster)} alt="" loading="lazy" />
+      : <span class="ph ph--fill"></span>}
+    {preview && (
+      <video class="video-row__preview" src={asset(preview)} muted loop playsinline preload="none"></video>
+    )}
+    <span class="video-row__pin">▶</span>
+  </span>
+  <span class="video-row__body">
+    <span class="video-row__kind">{kind}</span>
+    <span class="video-row__title">{title}</span>
+    <span class="video-row__sub">{sub}</span>
+  </span>
+  <span class="video-row__right">
+    <span class="dt">{date}</span>
+    <span class="dur">{duration}</span>
+  </span>
+</a>

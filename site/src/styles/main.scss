@@ -1,0 +1,23 @@
+// ─────────────────────────────────────────────
+//  황승하 · 파이트 레주메
+//  진입점. 토큰 → 기본 → 컴포넌트 순으로 쌓는다.
+//
+//  컴파일:
+//    docker compose -f docker/compose.yml run --rm app \
+//      'npx sass .superpowers/preview/assets/scss/main.scss \
+//                .superpowers/preview/assets/style.css'
+// ─────────────────────────────────────────────
+
+@use 'tokens';
+@use 'base';
+
+@use 'components/placeholder';
+@use 'components/button';
+@use 'components/topbar';
+@use 'components/hero';
+@use 'components/stats';
+@use 'components/match-row';
+@use 'components/video';
+@use 'components/image-viewer';
+@use 'components/marquee';
+@use 'components/contact';

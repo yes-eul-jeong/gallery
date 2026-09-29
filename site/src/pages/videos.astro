@@ -1,0 +1,80 @@
+---
+import { getCollection } from 'astro:content'
+import Base from '../layouts/Base.astro'
+import VideoRow from '../components/VideoRow.astro'
+import { byDateDesc } from '../lib/record'
+import { url } from '../lib/media'
+import {
+  ui, levelLabel, resultLabel, methodLabel, trainingLabel,
+  formatDate, formatDuration,
+} from '../i18n/ko'
+
+const matches = (await getCollection('matches')).sort(byDateDesc)
+const training = (await getCollection('training')).sort(byDateDesc)
+
+const rows = [
+  ...matches.filter((m) => m.data.video).map((m) => ({
+    href: `/match/${m.id}`,
+    filter: 'match',
+    kind: `경기 · ${levelLabel[m.data.level]}`,
+    title: `${m.data.event} · ${m.data.title}`,
+    sub: [
+      `vs ${m.data.opponent.name}`,
+      m.data.opponent.country,
+      m.data.weightClass,
+      `${methodLabel[m.data.method]} ${resultLabel[m.data.result]}`,
+    ].filter(Boolean).join(' · '),
+    date: formatDate(m.data.date),
+    duration: formatDuration(m.data.video!.duration),
+    poster: m.data.video!.poster,
+    preview: m.data.video!.preview,
+  })),
+  ...training.filter((t) => t.data.video).map((t) => ({
+    href: `/training/${t.id}`,
+    filter: t.data.type,
+    kind: trainingLabel[t.data.type],
+    title: t.data.title,
+    sub: t.data.place ?? '',
+    date: formatDate(t.data.date),
+    duration: formatDuration(t.data.video!.duration),
+    poster: t.data.video!.poster,
+    preview: t.data.video!.preview,
+  })),
+]
+
+// 실제로 영상이 있는 분류만 버튼으로 낸다
+const kinds = [
+  { key: 'match', label: '경기' },
+  ...(Object.entries(trainingLabel).map(([k, label]) => ({ key: k, label }))),
+].filter((k) => rows.some((r) => r.filter === k.key))
+---
+
+<Base title={`영상 · 황승하`} here="videos">
+  <main>
+    <div class="page-head">
+      <div class="container">
+        <a class="link-back" href={url('/')}><span>←</span> {ui.back}</a>
+        <h1 class="page-head__title">영상</h1>
+        <div class="page-head__count">
+          전체 <span data-filter-count>{ui.countUnit(rows.length)}</span>
+        </div>
+
+        <div class="chip-bar" data-filter-bar>
+          <button class="chip is-on" data-kind-filter="all">{ui.all}</button>
+          {kinds.map((k) => (
+            <button class="chip" data-kind-filter={k.key}>{k.label}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <section class="section" style="border-top:0; padding-top:28px">
+      <div class="section__inner">
+        <div class="video-list">
+          {rows.map((r) => <VideoRow {...r} />)}
+        </div>
+        <div class="empty-state" data-filter-empty hidden>{ui.empty.videos}</div>
+      </div>
+    </section>
+  </main>
+</Base>

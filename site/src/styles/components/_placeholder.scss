@@ -1,0 +1,43 @@
+// ─────────────────────────────────────────────
+//  컴포넌트: 사진 자리표시자
+//  실제 사진이 들어오면 <img> 로 교체한다.
+//  비율 수식어는 그대로 쓴다.
+// ─────────────────────────────────────────────
+
+@use '../mixins' as *;
+
+.ph {
+  background: repeating-linear-gradient(
+    45deg,
+    #1A1A1F 0 9px,
+    #17171C 9px 18px
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: s(1);
+  overflow: hidden;
+  text-align: center;
+  color: #4E4E57;
+  @include kr;
+
+  &__icon { font-size: 26px; opacity: .5; }
+
+  &__label { font-size: 12px; font-weight: fw(bold); }
+
+  &__ratio {
+    font-size: fs(micro);
+    letter-spacing: tr(wider);
+    color: c(faint);
+    font-family: var(--font-sans);
+    font-weight: fw(heavy);
+  }
+
+  // 비율
+  &--fill   { width: 100%; height: 100%; }
+  &--wide   { aspect-ratio: 3 / 2; }
+  &--tall   { aspect-ratio: 3 / 4; }
+  &--video  { aspect-ratio: 16 / 9; }
+  &--square { aspect-ratio: 1; }
+}

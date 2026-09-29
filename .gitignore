@@ -32,3 +32,6 @@ Thumbs.db
 # 로그
 *.log
 npm-debug.log*
+
+# 브레인스토밍 시안 (로컬 전용)
+.superpowers/

@@ -1,0 +1,54 @@
+---
+import { getCollection } from 'astro:content'
+import Base from '../layouts/Base.astro'
+import Lightbox from '../components/Lightbox.astro'
+import { asset, url } from '../lib/media'
+import { ui, photoKindLabel } from '../i18n/ko'
+
+const photos = await getCollection('photos')
+const kinds = Object.entries(photoKindLabel)
+  .filter(([k]) => photos.some((p) => p.data.kind === k))
+---
+
+<Base title="사진 · 황승하" here="photos">
+  <main>
+    <div class="page-head">
+      <div class="container">
+        <a class="link-back" href={url('/')}><span>←</span> {ui.back}</a>
+        <h1 class="page-head__title">사진</h1>
+        <div class="page-head__count">
+          전체 <span data-filter-count>{ui.countUnit(photos.length)}</span>
+        </div>
+
+        <div class="chip-bar" data-filter-bar>
+          <button class="chip is-on" data-kind-filter="all">{ui.all}</button>
+          {kinds.map(([k, label]) => (
+            <button class="chip" data-kind-filter={k}>{label}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <section class="section" style="border-top:0; padding-top:24px">
+      <div class="section__inner">
+        <div class="masonry">
+          {photos.map((p) => (
+            <figure
+              class="masonry__item"
+              data-kind={p.data.kind}
+              data-lightbox={`${p.data.caption} · ${p.data.context}`}
+            >
+              <img src={asset(p.data.file)} alt={p.data.caption} loading="lazy" />
+              <figcaption class="masonry__meta">
+                {p.data.caption}<span>{p.data.context}</span>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+        <div class="empty-state" data-filter-empty hidden>{ui.empty.photos}</div>
+      </div>
+    </section>
+  </main>
+
+  <Lightbox />
+</Base>
