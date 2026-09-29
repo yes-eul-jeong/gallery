@@ -130,7 +130,8 @@
     @include kr;
     font-size: fs(xsmall);
     color: c(muted);
-    margin-bottom: 0;
+    // p 의 기본 마진(위아래 1em)을 걷어낸다
+    margin: 0;
   }
 
   // ── 우하단 표시 ──

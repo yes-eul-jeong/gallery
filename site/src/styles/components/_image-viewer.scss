@@ -228,14 +228,16 @@
   &__item {
     position: relative;
     break-inside: avoid;
-    margin-bottom: 2px;
+    // figure 는 브라우저 기본값으로 좌우 40px, 위아래 1em 마진을 갖는다.
+    // 아래 간격만 지정하면 좌우 80px 가 그대로 남는다.
+    margin: 0 0 2px;
     border-radius: 0;
 
     @include up(sm) {
-      margin-bottom: s(2);
+      margin: 0 0 s(2);
       border-radius: r(md);
     }
-    @include up(lg) { margin-bottom: s(3); }
+    @include up(lg) { margin: 0 0 s(3); }
     overflow: hidden;
     cursor: pointer;
     filter: brightness(.86);
