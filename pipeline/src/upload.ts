@@ -44,6 +44,13 @@ export async function putFile(key: string, path: string): Promise<number> {
       Body: createReadStream(path),
       ContentLength: info.size,
       ContentType: contentTypeOf(path),
+      /**
+       * 반드시 Standard 로 올린다.
+       * Infrequent Access 는 무료 한도가 없고, 요청을 100만 건 단위로 올려 과금한다.
+       * 요청 41건에 9.9 달러가 청구된 적이 있다 (worklog 7절).
+       * 버킷 기본 클래스가 IA 라서 생략하면 그 값이 그대로 적용된다.
+       */
+      StorageClass: 'STANDARD',
     }),
   )
   return info.size

@@ -356,13 +356,18 @@ Worker가 R2 앞에 서서 모든 미디어 요청을 받는다.
 
 | 항목 | 무료 한도 | 예상 사용량 | 비용 |
 |---|---|---|---|
-| R2 저장 | 10GB | 경기 20~30편 + 장편 1~2편 = 17~30GB | 월 100~300원 |
+| R2 저장 (Standard) | 10GB | 경기 20~30편 + 장편 1~2편 = 17~30GB | 월 100~300원 |
 | R2 읽기 요청 | 월 1천만 | 수천 건 | 0원 |
 | R2 전송 | 무제한 무료 | - | 0원 |
 | Workers 요청 | 일 10만 | 수백 건 | 0원 |
 | GitHub Pages | 월 100GB 전송 | 사이트 코드만 (미디어는 R2) | 0원 |
 
 10~15분 영상을 1080p로 뽑으면 편당 380~560MB, 3시간 장편을 720p로 뽑으면 3.4GB다.
+
+이 표는 **Standard 스토리지 클래스를 전제로 한다.** Infrequent Access 는 무료 한도가
+아예 없고, 요청을 100만 건 단위로 올려 과금한다. 요청 1건이 Class A 9 달러,
+Class B 0.9 달러로 계산된다. 업로드 코드가 `StorageClass: 'STANDARD'` 를 명시하는
+이유다 (`pipeline/src/upload.ts`).
 
 ## 10. 배포
 
@@ -425,6 +430,8 @@ https://yes-eul-jeong.github.io/gallery/
 
 - 버킷 이름: `kickbox-media` (변경 가능)
 - 위치: Asia-Pacific
+- **기본 스토리지 클래스: Standard.** 여기서 Infrequent Access 를 고르면 무료 한도가
+  사라지고 요청 몇 건에 월 9.9 달러가 청구된다. 실제로 당했다 (`worklog.md` 7절)
 - 공개 접근은 켜지 않는다. Worker 를 거쳐서만 읽는다
 
 **4. R2 API 토큰 발급**
